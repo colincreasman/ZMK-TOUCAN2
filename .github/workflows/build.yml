@@ -2,5 +2,30 @@ name: Build ZMK firmware
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
+  # Derive a short, meaningful name for the firmware archive from the commit
+  # that triggered the build (e.g. "hrm-tuning-a-typing-first-e70cdad.zip")
+  # instead of a generic "firmware.zip".
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      archive_name: ${{ steps.derive.outputs.archive_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Derive archive name from commit message
+        id: derive
+        run: |
+          subject="$(git log -1 --pretty=%s)"
+          slug="$(printf '%s' "$subject" \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//' \
+            | cut -c1-40 \
+            | sed -E 's/-+$//')"
+          [ -n "$slug" ] || slug="firmware"
+          echo "archive_name=${slug}-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: prepare
     uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@v0.3
+    with:
+      archive_name: ${{ needs.prepare.outputs.archive_name }}
