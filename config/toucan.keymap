@@ -1,0 +1,204 @@
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/keys.h>
+#include <dt-bindings/zmk/bt.h>
+#include <dt-bindings/zmk/outputs.h>
+#include <dt-bindings/zmk/pointing.h>
+
+// Home row mods macro
+#define HRML(k1,k2,k3,k4) &hml LSHFT k1 &hml LCTRL k2  &hml LALT k3  &hml LGUI k4
+#define HRMR(k1,k2,k3,k4) &hmr RGUI k1  &hmr RALT k2  &hmr RCTRL k3  &hmr RSHFT k4
+
+// Key positions for positional hold-tap, kept for reference. Currently unused:
+// the homerow mods below deliberately do NOT use cross-hand gating (see the
+// note on `hml`). This is a ZMK Toucan2 (42 keys), so numbering below
+// matches the shield's matrix transform -- see boards/shields/toucan/toucan.dtsi:
+//   Row 0:  0   1  2  3  4  5  |  6  7  8  9 10  11
+//   Row 1: 12  13 14 15 16 17  | 18 19 20 21 22  23
+//   Row 2: 24  25 26 27 28 29  | 30 31 32 33 34  35
+//   Thumbs:       36 37 38     | 39 40 41
+// Positions 0, 11, 12, 23, 24, 35 are the outer pinky columns that exist on
+// the Toucan's 42-key matrix but have no equivalent on the 36-key totemist
+// this keymap was ported from -- they are bound to &none below.
+#define KEYS_L 1 2 3 4 5 13 14 15 16 17 25 26 27 28 29    // left-hand inner keys
+#define KEYS_R 6 7 8 9 10 18 19 20 21 22 30 31 32 33 34   // right-hand inner keys
+#define THUMBS 36 37 38 39 40 41                          // thumb keys
+#define UNUSED 0 11 12 23 24 35                           // extra pinky-column keys (no totemist equivalent)
+
+#define L0 0
+#define L1 1
+#define L2 2
+
+// Layer-tap, used by the right thumb `&lt L1 SPACE`.
+//
+// ZMK's stock `&lt` is `tap-preferred`, which only resolves a hold when the
+// tapping term expires -- pressing and releasing another key while it is held
+// does NOT trigger the hold. So a quick layer chord (hold the thumb, tap a
+// key, release) completed inside 200ms emits SPACE plus that key instead of
+// the layer keycode. `balanced` resolves the hold as soon as another key is
+// pressed and released, which is exactly what a layer chord looks like.
+&lt {
+    flavor = "balanced";
+    tapping-term-ms = <200>;
+    quick-tap-ms = <175>;
+};
+
+/ {
+    behaviors {
+        // Thumb hold-tap. Drives the thumb keys on BOTH halves:
+        // `&ht LG(C) ESC`, `&ht LSHFT TAB` (left) and `&ht RG(V) ESC` (right).
+        //
+        // Deliberately has NO `global-quick-tap` / `require-prior-idle-ms`.
+        // Those make ZMK resolve the key to an *instant tap* whenever any other
+        // key was pressed within the preceding window, no matter how long or
+        // how hard the key is then held -- see is_quick_tap() in ZMK's
+        // behavior_hold_tap.c. Since Shift is nearly always pressed immediately
+        // after typing a letter, that reliably emitted TAB instead of SHIFT.
+        //
+        // Prior-idle gating is right for homerow mods (see hml/hmr below), but
+        // wrong for thumbs, which are never pressed accidentally while typing.
+        ht: hold_tap {
+            label = "hold_tap";
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <200>;
+            quick-tap-ms = <175>;
+            bindings = <&kp>, <&kp>;
+        };
+
+        // Homerow mods.
+        //
+        // NOTE: no `hold-trigger-key-positions` / `hold-trigger-on-release`.
+        // Those implement urob's cross-hand ("timeless") positional hold-tap,
+        // where a homerow mod can ONLY resolve as a hold if the next key is on
+        // the opposite half. That gate is absolute -- there is no timeout
+        // escape hatch -- so holding LGUI (F) and pressing C, both left hand,
+        // can never become a hold and just emits "fc". That breaks the whole
+        // left-hand shortcut cluster (CMD/CTRL + Q W A S Z X C V) and every
+        // left-hand capital via LSHFT on A.
+        //
+        // With the positional gate removed, `require-prior-idle-ms` is the
+        // main guard against false mods mid-word, and the tapping term becomes
+        // the window in which a same-hand roll could still resolve as a hold
+        // (balanced resolves on the other key's release). 220ms narrows that
+        // window relative to the 280ms the gated config used.
+        //
+        // Trade-off: a fast same-hand roll that *starts* on the homerow after
+        // >150ms idle ("as", "sad", "fad") can register a mod. If that becomes
+        // the more annoying failure mode, re-add the two properties below
+        // (KEYS_R THUMBS for hml, KEYS_L THUMBS for hmr) and use combos for
+        // same-hand shortcuts, which is how urob handles it.
+        hml: home_row_mod_left {
+            label = "hrm_left";
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <220>;
+            quick-tap-ms = <150>;
+            require-prior-idle-ms = <150>;
+            bindings = <&kp>, <&kp>;
+        };
+
+        hmr: home_row_mod_right {
+            label = "hrm_right";
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <220>;
+            quick-tap-ms = <150>;
+            require-prior-idle-ms = <150>;
+            bindings = <&kp>, <&kp>;
+        };
+    };
+
+    combos {
+        compatible = "zmk,combos";
+        combo_esc_op {
+            // timeout-ms = <50>;
+            key-positions = <9 10>;  // Combo o+p for ESCAPE
+            bindings = <&kp ESC>;
+        };
+        combo_esc_qw {
+            // timeout-ms = <50>;
+            key-positions = <1 2>;  // Combo q+w for ESCAPE
+            bindings = <&kp ESC>;
+        };
+    };
+
+
+    keymap {
+        compatible = "zmk,keymap";
+
+        layer_zero {
+            bindings = <
+        //     ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮   ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮
+                &none       &kp Q       &kp W       &kp E       &kp R       &kp T           &kp Y       &kp U       &kp I       &kp O       &kp P       &none
+        //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
+                &none       HRML(A,         S,          D,          F)      &kp G           &kp H       HRMR(J,         K,          L,          BSLH)   &none
+        //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
+                &none       &kp Z       &kp X       &kp C       &kp V       &kp B           &kp N       &kp M       &kp COMMA   &kp DOT     &kp FSLH    &none
+        //     ╰───────────┴───────────┴───────────├───────────├───────────┼───────────┤   ├───────────├───────────┼───────────┴───────────┴───────────╯
+                                                &ht LG(C) ESC  &kp RET   &ht LSHFT TAB    &lt L1 SPACE  &kp BSPC   &ht RG(V) ESC
+        //                                         ╰───────────┴───────────┴───────────╯   ╰───────────┴───────────┴───────────╯
+            >;
+        };
+
+
+        layer_one {
+            bindings = <
+        //     ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮   ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮
+                &none       &kp ESC     &kp N1      &kp N2      &kp N3      &trans          &trans      &trans      &kp UP      &kp MINUS   &kp EQUAL   &none
+        //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
+                &none       HRML(GRAVE,     N4,         N5,         N6)     &trans          &trans      &kp LEFT    &kp DOWN    &kp RIGHT   &trans      &none
+        //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
+                &none       &trans      &kp N7      &kp N8      &kp N9      &kp N0          &kp SEMI    &kp SQT     &kp LBKT    &kp RBKT    &trans      &none
+        //     ╰───────────┴───────────┴───────────├───────────├───────────┼───────────┤   ├───────────├───────────┼───────────┴───────────┴───────────╯
+                                                   &trans      &trans      &trans          &trans      &trans      &trans
+        //                                         ╰───────────┴───────────┴───────────╯   ╰───────────┴───────────┴───────────╯
+            >;
+        };
+
+
+
+        layer_two {
+            bindings = <
+        //     ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮   ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮
+                &none       &bt BT_CLR  &trans      &trans      &trans      &trans          &kp C_PREV  &kp C_PP    &kp C_NEXT  &kp C_VOL_DN   &kp C_VOL_UP   &none
+        //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
+                &none      &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3   &trans   &trans     &trans       &trans     &kp C_BRI_DN   &kp C_BRI_UP   &none
+        //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
+                &none       &trans      &trans      &trans      &trans      &trans          &trans      &trans      &trans      &trans      &trans      &none
+        //     ╰───────────┴───────────┴───────────├───────────├───────────┼───────────┤   ├───────────├───────────┼───────────┴───────────┴───────────╯
+                                                   &trans      &trans      &trans          &trans      &trans      &trans
+        //                                         ╰───────────┴───────────┴───────────╯   ╰───────────┴───────────┴───────────╯
+            >;
+        };
+
+        // Reserved placeholder so the mouse layer below lands at index 4,
+        // which is what the `is_touching_processor` input-processor in
+        // toucan.dtsi activates (hardcoded `&mo 4`) while the trackpad is
+        // being touched. Fully transparent -- falls through to whichever
+        // base layer is active.
+        layer_three {
+            bindings = <
+                &trans &trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans &trans
+                &trans &trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans &trans
+                &trans &trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans &trans
+                              &trans &trans &trans           &trans &trans &trans
+            >;
+        };
+
+        // Mouse-click overlay layer. Auto-activated by `is_touching_processor`
+        // (see toucan.dtsi) whenever a finger is touching the trackpad, so the
+        // thumb cluster can left/middle/right-click without needing a
+        // dedicated held key. Mirrors the stock Toucan2 keymap's mouse layer.
+        layer_four {
+            bindings = <
+                &trans &trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans &trans
+                &trans &trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans &trans
+                &trans &trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans &trans
+                       &mkp MCLK &mkp LCLK &mkp RCLK         &mkp LCLK &mkp RCLK &mkp MCLK
+            >;
+        };
+    };
+};

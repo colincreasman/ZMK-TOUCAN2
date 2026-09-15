@@ -1,0 +1,85 @@
+#include "toucan.dtsi"
+
+&default_transform {
+    col-offset = <6>;
+};
+
+&kscan0 {
+    col-gpios
+    = <&gpio1 12 GPIO_ACTIVE_HIGH>
+    , <&gpio1 11 GPIO_ACTIVE_HIGH>
+    , <&gpio0 5 GPIO_ACTIVE_HIGH>
+    , <&gpio0 10 GPIO_ACTIVE_HIGH>
+    , <&gpio0 4 GPIO_ACTIVE_HIGH>
+    , <&gpio0 9 GPIO_ACTIVE_HIGH>
+    ;
+
+    row-gpios
+    = <&gpio0 19 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+    , <&gpio0 28 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+    , <&gpio1 1 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+    , <&gpio0 29 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+    ;
+};
+
+&pinctrl {
+    i2c0_azoteq_default: i2c0_azoteq_default {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 1, 13)>,
+                    <NRF_PSEL(TWIM_SCL, 1, 15)>;
+            bias-pull-up;
+        };
+    };
+
+    i2c0_azoteq_sleep: i2c0_azoteq_sleep {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 1, 13)>,
+                    <NRF_PSEL(TWIM_SCL, 1, 15)>;
+            low-power-enable;
+        };
+    };
+};
+
+&i2c0 {
+   status = "okay";
+    clock-frequency = <I2C_BITRATE_FAST>;
+    pinctrl-0 = <&i2c0_azoteq_default>;
+    pinctrl-1 = <&i2c0_azoteq_sleep>;
+    pinctrl-names = "default", "sleep";
+
+    tps43_trackpad: trackpad@74 {
+        compatible = "azoteq,tps43";
+        reg = <0x74>;
+        status = "okay";
+
+        rst-gpios = <&gpio1 14 GPIO_ACTIVE_HIGH>;
+        rdy-gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+
+        enable-power-management;
+        // idle-sleep; // provides maximal power savings but when ZMK is idle (i.e. you haven't used keyboard in 30secs) the touchpad will not work.  not recommended.
+        // timeout-lp1 = <3>; // 60s timeout before entering lp2 state (20 secs per unit) (default was 20s)
+        report-rate-lp2 = <640>; // 640ms report rate in LP2 state means 55uA draw rather than default 160ms 174uA draw
+        scroll-angle = <30>; // The default angle (about 47 deg) is too big on toucan2 I think
+        sensitivity = <100>;
+        scroll-sensitivity = <100>;
+
+        filter-settings=<0x0B>;
+        hold-time = <500>;
+
+        zoom;
+        scroll;
+        two-finger-tap;
+        single-tap;
+        press-and-hold;
+        //swipes;
+        three-finger-swipe;
+        three-finger-swipe-throttle-ms = <1200>;
+        switch-xy;
+        invert-scroll-y;
+
+    };
+};
+
+&trackpad_split {
+    device = <&tps43_trackpad>;
+};
