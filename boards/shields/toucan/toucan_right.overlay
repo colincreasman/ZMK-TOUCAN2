@@ -60,7 +60,13 @@
         // timeout-lp1 = <3>; // 60s timeout before entering lp2 state (20 secs per unit) (default was 20s)
         report-rate-lp2 = <640>; // 640ms report rate in LP2 state means 55uA draw rather than default 160ms 174uA draw
         scroll-angle = <30>; // The default angle (about 47 deg) is too big on toucan2 I think
-        sensitivity = <100>;
+
+        // Tracking speed on this Mac's trackpad (System Settings > Trackpad >
+        // Point & Click) is set noticeably above the midpoint, toward "Fast"
+        // (roughly 4/5 of the way along the slider). 100 = the driver's
+        // "normal" baseline, so bumped to 150 (+50%) to get closer to that
+        // without overshooting into twitchy/overshoot territory.
+        sensitivity = <150>;
         scroll-sensitivity = <100>;
 
         filter-settings=<0x0B>;

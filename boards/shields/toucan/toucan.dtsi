@@ -118,6 +118,19 @@
             bindings  = <&mo 4>;            // Activate Layer 4 while held &mo 4
         };
 
+        // 3-finger swipe directions, tuned to match this Mac's actual System
+        // Settings > Trackpad gestures (see git history for the screenshots):
+        //   - Mission Control: ON ("Swipe Up with Three Fingers") -> Ctrl+Up,
+        //     macOS's actual default Mission Control shortcut (not Ctrl+Cmd+Up).
+        //   - "Swipe between full-screen applications": OFF, and "App Exposé"
+        //     / "Show Desktop": OFF -> left/right/down no longer send the
+        //     space-switching/Exposé shortcuts.
+        //   - "Swipe between pages": ON ("Two or Three Fingers"). This driver
+        //     has no distinct 2-finger swipe (2-finger movement is claimed by
+        //     `scroll`), so 3-finger left/right is repurposed to send the
+        //     page-navigation shortcut (Cmd+[ / Cmd+]) instead, since that's
+        //     the gesture that's actually enabled -- down is left as a no-op
+        //     since nothing is bound to it in System Settings.
         swipe_button_mapper: swipe_button_mapper {
             compatible = "zmk,input-processor-behaviors";
             #input-processor-cells = <0>;
@@ -125,7 +138,7 @@
 #ifdef TOUCAN_WIN_MODE
             bindings = <&kp LG(TAB)>, <&kp LG(RIGHT)>, <&kp LG(D)>, <&kp LG(LEFT)>;
 #else
-            bindings = <&kp LC(LG(UP))>, <&kp LC(LG(RIGHT))>, <&kp LC(LG(DOWN))>, <&kp LC(LG(LEFT))>;
+            bindings = <&kp LC(UP)>, <&kp LG(RBKT)>, <&none>, <&kp LG(LBKT)>;
 #endif
         };
     };
