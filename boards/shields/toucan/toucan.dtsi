@@ -158,12 +158,22 @@
         compatible = "zmk,input-listener";
         status = "disabled";
         device = <&trackpad_split>;
-        input-processors = <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 20>, <&zip_zoom_mapper>, <&is_touching_processor>, <&swipe_button_mapper>;
+        // Scroll scaling: the tps43 driver reports raw trackpad counts as
+        // INPUT_REL_WHEEL, and every wheel unit is a full scroll notch on the
+        // host (~3 lines on macOS, then multiplied again by macOS's scroll
+        // acceleration). At 1/20 a normal two-finger swipe produced dozens of
+        // notches per second, which no amount of host-side tuning (System
+        // Settings / LinearMouse) can tame. 1/100 with track-remainders (set
+        // on zip_scroll_scaler upstream, so sub-notch motion is accumulated
+        // rather than dropped) gives roughly one notch per 100 counts of
+        // finger travel. Raise the divisor to slow scrolling further, lower it
+        // to speed it up.
+        input-processors = <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 100>, <&zip_zoom_mapper>, <&is_touching_processor>, <&swipe_button_mapper>;
         scroller {
             layers = <1 2>;
             input-processors = <
                 &zip_xy_to_scroll_mapper
-                &zip_scroll_scaler 1 20
+                &zip_scroll_scaler 1 100
                 &zip_scroll_transform INPUT_TRANSFORM_X_INVERT
             >;
         };

@@ -57,8 +57,20 @@
 
         enable-power-management;
         // idle-sleep; // provides maximal power savings but when ZMK is idle (i.e. you haven't used keyboard in 30secs) the touchpad will not work.  not recommended.
-        // timeout-lp1 = <3>; // 60s timeout before entering lp2 state (20 secs per unit) (default was 20s)
-        report-rate-lp2 = <640>; // 640ms report rate in LP2 state means 55uA draw rather than default 160ms 174uA draw
+
+        // Wake latency vs. power: the trackpad walks itself down ACTIVE ->
+        // IDLE -> LP1 -> LP2 on its own timers. In LP2 it only *scans* for a
+        // finger once per report period, and it needs a couple of scans (plus
+        // an ATI re-tune) before it starts reporting movement. With LP2 at
+        // 640ms that turned into multiple seconds of dead cursor the first
+        // time you touched the pad after typing for a while, and the stock
+        // TIMEOUT_LP1 (20s) meant it reached LP2 almost immediately.
+        //
+        // So: stay in LP1 for 180s (9 * 20s units) and keep LP2 scanning at
+        // the driver default 160ms. Costs roughly 120uA more than 640ms LP2,
+        // which is negligible next to the ~2mA the board draws anyway.
+        timeout-lp1 = <9>;
+        report-rate-lp2 = <160>;
         scroll-angle = <30>; // The default angle (about 47 deg) is too big on toucan2 I think
 
         // Tracking speed on this Mac's trackpad (System Settings > Trackpad >
