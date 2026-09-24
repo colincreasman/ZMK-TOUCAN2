@@ -12,10 +12,11 @@ leaves the trackpad completely dead since the wrong driver is loaded).
 
 - **Keymap**: [config/toucan.keymap](config/toucan.keymap), ported from my
   [ZMK-TOTEMIST](https://github.com/colincreasman/ZMK-TOTEMIST) config (homerow mods, thumb hold-taps, layer-tap,
-  ESC combos). The Toucan2's 42-key matrix has 6 more keys (an outer pinky column per side) than the 36-key
-  totemist, so those extra positions are bound to `&none`. `layer_four` (the mouse-click layer) is preserved from
-  the stock keymap since `is_touching_processor` in `toucan.dtsi` hardcodes `&mo 4` to activate it while the
-  trackpad is touched -- see the comments in the keymap for the full layer/position map.
+  ESC combos). This 36-key Toucan2 omits the shield matrix's six outer-column switch positions, so those positions
+  remain `&none`. Holding both inner thumbs activates dedicated maintenance layer 3: Bluetooth profiles stay in
+  their previous left-hand positions, Bluetooth clear moves one key inward to `W`, and 2-second bootloader holds
+  live on the real top pinkies (`Q` for the left half and `P` for the right). `layer_four` remains the mouse-click
+  layer because `is_touching_processor` in `toucan.dtsi` hardcodes `&mo 4` while the trackpad is touched.
 - **General configs**: [boards/shields/toucan/toucan_left.conf](boards/shields/toucan/toucan_left.conf) and [boards/shields/toucan/toucan_right.conf](boards/shields/toucan/toucan_right.conf)
 - **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) maps a standalone 3-finger swipe up to Mission Control (`Ctrl+Up`). The other 3-finger directions are deliberately unbound because the Azoteq driver emits horizontal and vertical events independently; ignoring incidental horizontal drift prevents page-navigation shortcuts from interfering with Mission Control. Two-finger scrolling/page navigation remains on the normal scroll path.
 - **Invert scroll / trackpad settings**: the `tps43_trackpad` node in [boards/shields/toucan/toucan_right.overlay](boards/shields/toucan/toucan_right.overlay).
