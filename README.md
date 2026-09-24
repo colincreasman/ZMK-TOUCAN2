@@ -17,9 +17,7 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   the stock keymap since `is_touching_processor` in `toucan.dtsi` hardcodes `&mo 4` to activate it while the
   trackpad is touched -- see the comments in the keymap for the full layer/position map.
 - **General configs**: [boards/shields/toucan/toucan_left.conf](boards/shields/toucan/toucan_left.conf) and [boards/shields/toucan/toucan_right.conf](boards/shields/toucan/toucan_right.conf)
-- **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi), tuned to mirror this Mac's actual System Settings > Trackpad gestures
-  (Mission Control on via 3-finger up, "swipe between full-screen applications"/App Exposé off, "swipe between
-  pages" repurposed onto 3-finger left/right since this driver has no distinct 2-finger swipe).
+- **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) maps a standalone 3-finger swipe up to Mission Control (`Ctrl+Up`). The other 3-finger directions are deliberately unbound because the Azoteq driver emits horizontal and vertical events independently; ignoring incidental horizontal drift prevents page-navigation shortcuts from interfering with Mission Control. Two-finger scrolling/page navigation remains on the normal scroll path.
 - **Invert scroll / trackpad settings**: the `tps43_trackpad` node in [boards/shields/toucan/toucan_right.overlay](boards/shields/toucan/toucan_right.overlay).
   `sensitivity` is bumped from the driver default (100) to 150 to get closer to this Mac's "Fast" tracking-speed
   setting. Tap-to-click (`single-tap`) and two-finger-tap-to-right-click (`two-finger-tap`) already match System
