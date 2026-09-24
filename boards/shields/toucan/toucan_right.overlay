@@ -84,7 +84,10 @@
         filter-settings=<0x0B>;
         hold-time = <500>;
 
-        zoom;
+        // zoom; // Disabled: pinch-to-zoom (Cmd+/Cmd-) kept firing accidentally
+        // during normal two-finger scrolling/movement. Not present -> the
+        // driver never detects/reports the gesture at all (see the tps43
+        // driver's TPS43_ZOOM handling, gated on config->zoom).
         scroll;
         two-finger-tap;
         single-tap;

@@ -168,7 +168,13 @@
         // rather than dropped) gives roughly one notch per 100 counts of
         // finger travel. Raise the divisor to slow scrolling further, lower it
         // to speed it up.
-        input-processors = <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 100>, <&zip_zoom_mapper>, <&is_touching_processor>, <&swipe_button_mapper>;
+        //
+        // zip_zoom_mapper is intentionally left out of this pipeline: the
+        // pinch-to-zoom gesture it maps is disabled at the driver (see
+        // toucan_right.overlay, `zoom;` removed), so it would never fire
+        // anyway. Left in the tree (unreferenced) rather than deleted, in
+        // case zoom is ever re-enabled.
+        input-processors = <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 100>, <&is_touching_processor>, <&swipe_button_mapper>;
         scroller {
             layers = <1 2>;
             input-processors = <
