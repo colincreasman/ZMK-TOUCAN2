@@ -13,3 +13,7 @@ target_sources_ifdef(CONFIG_ZMK_INPUT_PROCESSOR_SWIPE_ARBITER app PRIVATE
 target_sources_ifdef(CONFIG_ZMK_INPUT_PROCESSOR_SCROLL_SHORTCUT app PRIVATE
     src/input_processor_scroll_shortcut.c
 )
+
+target_sources_ifdef(CONFIG_ZMK_INPUT_PROCESSOR_ROTATE app PRIVATE
+    src/input_processor_rotate.c
+)

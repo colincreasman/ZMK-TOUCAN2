@@ -19,7 +19,24 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   live on the real top pinkies (`Q` for the left half and `P` for the right). `layer_four` remains the mouse-click
   layer because `is_touching_processor` in `toucan.dtsi` hardcodes `&mo 4` while the trackpad is touched.
 - **General configs**: [boards/shields/toucan/toucan_left.conf](boards/shields/toucan/toucan_left.conf) and [boards/shields/toucan/toucan_right.conf](boards/shields/toucan/toucan_right.conf)
-- **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) maps standalone 3-finger swipes. Up sends `Option+\`` -- this Mac remaps Mission Control to `Opt+\`` under System Settings > Keyboard > Keyboard Shortcuts > Mission Control, so the `Ctrl+Up` default does nothing here. Left/right drive [AltTab](https://alt-tab-macos.netlify.app/), mirroring the "3-finger Horizontal Swipe" trigger set up on this Mac's built-in trackpad: right sends `Opt+Tab` (next window) and left sends `Opt+Shift+Tab` (previous window), matching AltTab's Shortcut 1. Because the firmware sends a discrete press/release, one swipe steps one window instead of holding the switcher open. Down stays unbound since every other Mission Control shortcut is unchecked on this Mac. The driver emits horizontal and vertical events independently, so swipe reasonably straight to avoid firing two shortcuts at once; `three-finger-swipe-throttle-ms` (1200ms) keeps one motion from repeating and therefore also caps how quickly swipes can be repeated.
+- **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) maps standalone 3-finger swipes. Up sends `Option+\`` -- this Mac remaps Mission Control to `Opt+\`` under System Settings > Keyboard > Keyboard Shortcuts > Mission Control, so the `Ctrl+Up` default does nothing here. Left/right drive [AltTab](https://alt-tab-macos.netlify.app/), mirroring the "3-finger Horizontal Swipe" trigger set up on this Mac's built-in trackpad: right sends `Opt+Tab` (next window) and left sends `Opt+Shift+Tab` (previous window), matching AltTab's Shortcut 1. Because the firmware sends a discrete press/release, one swipe steps one window instead of holding the switcher open. Down stays unbound since every other Mission Control shortcut is unchecked on this Mac. The driver emits horizontal and vertical events independently, so swipe reasonably straight to avoid firing two shortcuts at once; `three-finger-swipe-throttle-ms` (40ms) plus the swipe arbiter below keep one motion from repeating.
+
+> **Gesture tuning is dialled in -- do not change these values casually.**
+> Hardware testing confirmed the 2- and 3-finger gestures now trigger reliably and never cross-fire: 3-finger up
+> for Mission Control lands with near-zero misfires even when alternating with 2-finger scrolling. That state is
+> tagged `gestures-dialed-in`, so it can always be recovered with `git checkout gestures-dialed-in`.
+>
+> These values only work as a set -- change them together or not at all:
+>
+> | Setting | Value | Where |
+> |---|---|---|
+> | `three-finger-swipe-throttle-ms` | `40` | `toucan_right.overlay` |
+> | `swipe_arbiter` `lead` / `max-samples` | `2` / `8` | `toucan.dtsi` |
+> | `hscroll_shortcut` `threshold` | `120` | `toucan.dtsi` |
+>
+> In particular, raising the driver throttle back toward its old `1200` *without* also removing `&swipe_arbiter`
+> will make horizontal swipes hard to trigger again -- that exact combination was the original bug.
+
 - **Page navigation**: the 3-finger left/right swipe used to send `Cmd+[` / `Cmd+]`, but that slot now belongs to
   AltTab. Back/forward moved to a **two-finger** horizontal swipe via the `hscroll_shortcut` node
   ([src/input_processor_scroll_shortcut.c](src/input_processor_scroll_shortcut.c)). The driver only reports swipe
@@ -42,6 +59,27 @@ leaves the trackpad completely dead since the wrong driver is loaded).
 
   To revert to the raw driver behavior: drop `&swipe_arbiter` from the listener's `input-processors` and set
   `three-finger-swipe-throttle-ms` back to `1200`.
+- **Pointer rotation**: this is beekeeb's **"Thumb Angle"** trackpad variant, where the pad is mounted rotated
+  **counter-clockwise** by roughly 35 degrees so it faces the thumb. The alternative **"Column Angle"** variant
+  mounts the same pad square to the case. Fingers arrive square to the keyboard either way, so on this variant a
+  stroke that feels "straight up" reaches the sensor as a diagonal. The `pointer_rotate` node
+  ([src/input_processor_rotate.c](src/input_processor_rotate.c)) rotates the reported X/Y pair to cancel that
+  mount angle out, making the pad behave like the Column Angle version.
+  - Sign convention: **positive is counter-clockwise on screen**. The correction matches the pad's own
+    counter-clockwise mount, so the default is `angle = <35>`. Flip the sign if the cursor tracks the wrong
+    diagonal; change the magnitude if the correction is too strong or too weak.
+  - It runs first in the chain so the activation gate and acceleration curve both operate in the hand's frame.
+  - Rotation needs both axes at once, but they arrive as two separate events. The driver always reports X
+    immediately followed by Y for the same sample, so the processor buffers X, does the maths when Y arrives,
+    emits the rotated Y on that event, and carries the rotated X to the next report. One axis is therefore one
+    report (~10ms) behind the other, which is not perceptible.
+  - Sine is a fixed-point table covering 0-90 degrees with the other quadrants derived from it, so the rotation is
+    exact to a whole degree with no floating point. The table is consulted in the device's init hook rather than
+    the config initializer, since a function call is not a constant expression.
+  - A negative `angle` in devicetree arrives as a raw 32-bit cell (its two's-complement bit pattern), so the
+    driver casts it back to `int32_t`. Comparing the raw macro against a negative bound does not work.
+  - **Only pointer movement is rotated.** Scroll and the two/three-finger swipes are resolved inside the Azoteq
+    driver, upstream of every input processor, so gesture behavior is unaffected.
 - **Invert scroll / trackpad settings**: the `tps43_trackpad` node in [boards/shields/toucan/toucan_right.overlay](boards/shields/toucan/toucan_right.overlay).
   `sensitivity` sits at the driver's 100 baseline; the feel of the pointer is shaped by the `pointer_accel` input
   processor instead (see below).

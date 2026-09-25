@@ -110,6 +110,38 @@
             track-remainders;
         };
 
+        // Compensates for the trackpad being mounted at an angle. This is
+        // beekeeb's "Thumb Angle" variant, where the pad is rotated
+        // COUNTER-CLOCKWISE by about 35 degrees (its top edge rises to the
+        // right) so it faces the thumb. The alternative "Column Angle" variant
+        // mounts the same pad square to the case. Fingers arrive square to the
+        // keyboard either way, so on this variant a stroke that feels "straight
+        // up" lands on the sensor as a diagonal.
+        //
+        // Rotating the reported vector counter-clockwise by the same 35 degrees
+        // cancels the mount angle out, making the pad behave like the Column
+        // Angle version.
+        //
+        // Sign convention: positive is counter-clockwise on screen, and the
+        // correction matches the pad's own counter-clockwise mount, so this is
+        // POSITIVE. Flip the sign if the cursor tracks the wrong diagonal;
+        // change the magnitude if the correction is too strong or too weak.
+        //
+        // This runs first so everything downstream (the activation gate and the
+        // acceleration curve) works in the hand's frame rather than the
+        // sensor's. Only pointer movement is affected: scroll and the two/three
+        // finger swipes are resolved inside the Azoteq driver, upstream of every
+        // input processor, so the gesture tuning tagged as `gestures-dialed-in`
+        // is untouched.
+        pointer_rotate: pointer_rotate {
+            compatible = "zmk,input-processor-rotate";
+            #input-processor-cells = <0>;
+            angle = <35>;
+            x-code = <INPUT_REL_X>;
+            y-code = <INPUT_REL_Y>;
+            reset-ms = <300>;
+        };
+
         // Pointer acceleration plus a movement activation gate. This runs FIRST
         // in trackpad_listener's chain for two reasons: it should shape the raw
         // deltas before anything else looks at them, and it needs to observe
@@ -282,7 +314,7 @@
         // toucan_right.overlay, `zoom;` removed), so it would never fire
         // anyway. Left in the tree (unreferenced) rather than deleted, in
         // case zoom is ever re-enabled.
-        input-processors = <&pointer_accel>, <&swipe_arbiter>, <&hscroll_shortcut>, <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 100>, <&is_touching_processor>, <&swipe_button_mapper>;
+        input-processors = <&pointer_rotate>, <&pointer_accel>, <&swipe_arbiter>, <&hscroll_shortcut>, <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 100>, <&is_touching_processor>, <&swipe_button_mapper>;
         scroller {
             layers = <1 2>;
             input-processors = <

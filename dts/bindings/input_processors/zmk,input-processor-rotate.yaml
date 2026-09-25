@@ -1,0 +1,48 @@
+# Copyright (c) 2026 Colin Creasman
+# SPDX-License-Identifier: MIT
+
+description: |
+  Rotates relative pointer movement by a fixed angle.
+
+  The trackpad is mounted at an angle to the keyboard, but fingers arrive square
+  to the keyboard, so a stroke that feels "straight up" registers as a diagonal.
+  This processor applies a 2D rotation to the X/Y pair so screen movement lines
+  up with the direction the hand actually moved.
+
+  Only pointer movement is rotated. Scroll and the two/three-finger swipe
+  gestures are resolved inside the Azoteq driver, upstream of any input
+  processor, so they are unaffected.
+
+  The driver always reports X immediately followed by Y for the same sample, and
+  a rotation needs both axes at once. The processor therefore buffers X, does the
+  maths when Y arrives, emits the rotated Y on that event, and carries the
+  rotated X over to the next report.
+
+compatible: "zmk,input-processor-rotate"
+
+include: ip_zero_param.yaml
+
+properties:
+  angle:
+    type: int
+    required: true
+    description: >
+      Rotation in whole degrees, -180 to 180. Positive rotates movement
+      counter-clockwise. If the cursor tracks the wrong diagonal, negate this.
+
+  x-code:
+    type: int
+    default: 0 # INPUT_REL_X
+    description: Relative axis treated as horizontal.
+
+  y-code:
+    type: int
+    default: 1 # INPUT_REL_Y
+    description: Relative axis treated as vertical.
+
+  reset-ms:
+    type: int
+    default: 300
+    description: >
+      Idle gap that discards a buffered sample, used as a fallback if a
+      touch-release event is ever missed.
