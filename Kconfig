@@ -14,3 +14,13 @@ config ZMK_INPUT_PROCESSOR_ACCEL
       Velocity-based pointer acceleration with a movement activation gate. Only
       built for boards that actually instantiate the node, which keeps
       pointer-less targets such as settings_reset unaffected.
+
+DT_COMPAT_ZMK_INPUT_PROCESSOR_SWIPE_ARBITER := zmk,input-processor-swipe-arbiter
+
+config ZMK_INPUT_PROCESSOR_SWIPE_ARBITER
+    bool "Three-finger swipe arbiter input processor"
+    default $(dt_compat_enabled,$(DT_COMPAT_ZMK_INPUT_PROCESSOR_SWIPE_ARBITER))
+    depends on ZMK_POINTING
+    help
+      Collapses a stream of raw swipe direction samples into a single actuation
+      in the dominant direction.
