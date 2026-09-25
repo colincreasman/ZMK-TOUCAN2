@@ -146,7 +146,7 @@
         };
         combo_maintenance_layer {
             timeout-ms = <100>;
-            key-positions = <38 39>;  // Hold both inner thumbs.
+            key-positions = <36 41>;  // Hold both far outer thumbs.
             bindings = <&mo L3>;
             layers = <L0 L1 L2>;
         };
@@ -201,8 +201,9 @@
             >;
         };
 
-        // Dedicated maintenance layer. Hold both inner thumbs (positions
-        // 38 and 39) to activate it. Bluetooth controls retain their previous
+        // Dedicated maintenance layer. Hold both far outer thumbs (positions
+        // 36 and 41) to activate it. This leaves the center Shift + L1 thumb
+        // chord completely untouched. Bluetooth controls retain their previous
         // physical positions where possible. The bootloader holds move to Q/P,
         // the real top pinky keys on the 36-key variant; hold the corresponding
         // side for two seconds to enter that half's UF2 bootloader.
