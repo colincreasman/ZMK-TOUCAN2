@@ -111,25 +111,24 @@
             bindings = <&kp>, <&kp>;
         };
 
-        // Software bootloader entry for the maintenance layer. It is bound to
-        // Q (position 1) and P (position 10), the top pinky keys that physically
-        // exist on the 36-key variant. Tap does nothing; a 2s+ hold reboots
-        // THAT PHYSICAL HALF straight into the UF2 bootloader.
+        // Software bootloader entry for the maintenance layer. This uses a
+        // dedicated long-press behavior instead of `zmk,behavior-hold-tap`.
+        // Both inner thumbs are hold-tap keys, and ZMK v0.3 rejects a second
+        // hold-tap while either thumb remains held. Tap does nothing; a 2s+
+        // hold invokes `&bootloader` with the original key's split source.
         //
         // This exists because ZMK behaviors with BEHAVIOR_LOCALITY_EVENT_SOURCE
         // (which &bootloader uses) execute on whichever half the triggering
         // key physically lives on, even though all keymap/behavior logic runs
         // on the central (left) half -- so position 10, physically on the
         // right board, reliably bootloaders the right half over BLE even
-        // when its physical reset button doesn't. "hold-preferred" + no
-        // quick-tap means brief accidental contact can never fire it early.
+        // when its physical reset button doesn't.
         bhold: bootloader_hold {
             label = "bootloader_hold";
-            compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <2>;
-            flavor = "hold-preferred";
-            tapping-term-ms = <2000>;
-            bindings = <&none>, <&bootloader>;
+            compatible = "zmk,behavior-long-press";
+            #binding-cells = <0>;
+            duration-ms = <2000>;
+            bindings = <&bootloader>;
         };
     };
 
@@ -209,7 +208,7 @@
         // side for two seconds to enter that half's UF2 bootloader.
         layer_three {
             bindings = <
-                &none &bhold 0 0 &bt BT_CLR &none &none &none   &none &none &none &none &bhold 0 0 &none
+                &none &bhold &bt BT_CLR &none &none &none   &none &none &none &none &bhold &none
                 &none &bt BT_SEL 0 &bt BT_SEL 1 &bt BT_SEL 2 &bt BT_SEL 3 &none   &none &none &none &none &none &none
                 &none &none &none &none &none &none   &none &none &none &none &none &none
                       &none &none &trans              &trans &none &none
