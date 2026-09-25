@@ -22,8 +22,23 @@ leaves the trackpad completely dead since the wrong driver is loaded).
 - **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) maps standalone 3-finger swipes. Up sends `Option+\`` -- this Mac remaps Mission Control to `Opt+\`` under System Settings > Keyboard > Keyboard Shortcuts > Mission Control, so the `Ctrl+Up` default does nothing here. Left/right drive [AltTab](https://alt-tab-macos.netlify.app/), mirroring the "3-finger Horizontal Swipe" trigger set up on this Mac's built-in trackpad: right sends `Opt+Tab` (next window) and left sends `Opt+Shift+Tab` (previous window), matching AltTab's Shortcut 1. Because the firmware sends a discrete press/release, one swipe steps one window instead of holding the switcher open. Down stays unbound since every other Mission Control shortcut is unchecked on this Mac. The driver emits horizontal and vertical events independently, so swipe reasonably straight to avoid firing two shortcuts at once; `three-finger-swipe-throttle-ms` (1200ms) keeps one motion from repeating and therefore also caps how quickly swipes can be repeated.
 - **Page navigation**: the 3-finger left/right swipe used to send `Cmd+[` / `Cmd+]`, but that slot now belongs to AltTab. Browser back/forward is still available through macOS's native "Swipe between pages" gesture, which acts on the two-finger horizontal scroll the driver already reports as `INPUT_REL_HWHEEL` -- set System Settings > Trackpad > More Gestures > Swipe between pages to an option that includes two fingers.
 - **Invert scroll / trackpad settings**: the `tps43_trackpad` node in [boards/shields/toucan/toucan_right.overlay](boards/shields/toucan/toucan_right.overlay).
-  `sensitivity` is dialled down from the driver default (100) to 80, since 150 stacked with macOS's own pointer
-  acceleration and made the small pad too twitchy for precise targeting. Tap-to-click (`single-tap`) and two-finger-tap-to-right-click (`two-finger-tap`) already match System
+  `sensitivity` sits at the driver's 100 baseline; the feel of the pointer is shaped by the `pointer_accel` input
+  processor instead (see below).
+- **Pointer acceleration**: a local `zmk,input-processor-accel` processor, implemented in
+  [src/input_processor_accel.c](src/input_processor_accel.c) and configured on the `pointer_accel` node in
+  [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi). It exists because a single flat
+  `sensitivity` multiplier forces a choice between precise-but-slow and fast-but-twitchy. Instead:
+  - `activation-distance = <8>` swallows the first 8 counts of travel after each new touch, so resting or brushing
+    a finger while typing cannot nudge the cursor. The gate re-arms on every finger lift, which the processor
+    detects by watching `INPUT_BTN_TOUCH` -- this is why `pointer_accel` must be the *first* entry in the
+    listener's `input-processors`, since `is_touching_processor` consumes that event with `ZMK_INPUT_PROC_STOP`.
+  - `min-factor = <800>` keeps slow movement at 0.8x for deliberate, fine positioning.
+  - Past `speed-threshold` the factor climbs a quadratic curve to `max-factor` (4.5x) at `speed-max`, so a longer
+    stroke crosses the screen quickly.
+  - `track-remainders` is required, since a sub-1.0 `min-factor` would otherwise truncate slow drags to nothing.
+
+  Tuning: raise `min-factor` if slow movement feels too heavy, raise `max-factor` or lower `speed-max` for a more
+  aggressive ramp, and raise `activation-distance` if stray cursor movement still sneaks through while typing. Tap-to-click (`single-tap`) and two-finger-tap-to-right-click (`two-finger-tap`) already match System
   Settings 1:1. There's no firmware equivalent for Force Click/haptic feedback or click-pressure firmness --
   this is a flat capacitive trackpad with no physical click mechanism or haptic actuator, so those macOS settings
   have no analog here.

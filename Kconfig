@@ -3,3 +3,14 @@ config ZMK_BEHAVIOR_LONG_PRESS
     default y
     help
       Invoke a behavior only after its key remains held for a configured duration.
+
+DT_COMPAT_ZMK_INPUT_PROCESSOR_ACCEL := zmk,input-processor-accel
+
+config ZMK_INPUT_PROCESSOR_ACCEL
+    bool "Pointer acceleration input processor"
+    default $(dt_compat_enabled,$(DT_COMPAT_ZMK_INPUT_PROCESSOR_ACCEL))
+    depends on ZMK_POINTING
+    help
+      Velocity-based pointer acceleration with a movement activation gate. Only
+      built for boards that actually instantiate the node, which keeps
+      pointer-less targets such as settings_reset unaffected.

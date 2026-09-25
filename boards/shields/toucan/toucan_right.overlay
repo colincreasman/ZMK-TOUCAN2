@@ -73,12 +73,12 @@
         report-rate-lp2 = <160>;
         scroll-angle = <30>; // The default angle (about 47 deg) is too big on toucan2 I think
 
-        // Cursor tracking speed. 100 is the driver's "normal" baseline. This
-        // was previously raised to 150 to mirror this Mac's "Fast" tracking
-        // slider, but on a pad this small that stacks with the host-side
-        // acceleration and ends up far too twitchy to land small targets, so
-        // it now sits well below baseline. Adjust in steps of ~10 to taste.
-        sensitivity = <80>;
+        // Cursor tracking speed. 100 is the driver's "normal" baseline and the
+        // curve shaping now lives in the pointer_accel input processor (see
+        // toucan.dtsi) rather than in this single flat multiplier. Raising this
+        // scales the whole acceleration curve up; to change only the slow or
+        // only the fast end, adjust min-factor / max-factor instead.
+        sensitivity = <100>;
         scroll-sensitivity = <100>;
 
         filter-settings=<0x0B>;
