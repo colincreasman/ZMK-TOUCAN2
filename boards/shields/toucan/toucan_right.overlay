@@ -73,12 +73,12 @@
         report-rate-lp2 = <160>;
         scroll-angle = <30>; // The default angle (about 47 deg) is too big on toucan2 I think
 
-        // Tracking speed on this Mac's trackpad (System Settings > Trackpad >
-        // Point & Click) is set noticeably above the midpoint, toward "Fast"
-        // (roughly 4/5 of the way along the slider). 100 = the driver's
-        // "normal" baseline, so bumped to 150 (+50%) to get closer to that
-        // without overshooting into twitchy/overshoot territory.
-        sensitivity = <150>;
+        // Cursor tracking speed. 100 is the driver's "normal" baseline. This
+        // was previously raised to 150 to mirror this Mac's "Fast" tracking
+        // slider, but on a pad this small that stacks with the host-side
+        // acceleration and ends up far too twitchy to land small targets, so
+        // it now sits well below baseline. Adjust in steps of ~10 to taste.
+        sensitivity = <80>;
         scroll-sensitivity = <100>;
 
         filter-settings=<0x0B>;

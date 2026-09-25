@@ -19,10 +19,10 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   live on the real top pinkies (`Q` for the left half and `P` for the right). `layer_four` remains the mouse-click
   layer because `is_touching_processor` in `toucan.dtsi` hardcodes `&mo 4` while the trackpad is touched.
 - **General configs**: [boards/shields/toucan/toucan_left.conf](boards/shields/toucan/toucan_left.conf) and [boards/shields/toucan/toucan_right.conf](boards/shields/toucan/toucan_right.conf)
-- **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) maps a standalone 3-finger swipe up to Mission Control (`Ctrl+Up`). The other 3-finger directions are deliberately unbound because the Azoteq driver emits horizontal and vertical events independently; ignoring incidental horizontal drift prevents page-navigation shortcuts from interfering with Mission Control. Two-finger scrolling/page navigation remains on the normal scroll path.
+- **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) maps standalone 3-finger swipes. Up sends `Option+\`` -- this Mac remaps Mission Control to `Opt+\`` under System Settings > Keyboard > Keyboard Shortcuts > Mission Control, so the `Ctrl+Up` default does nothing here. Left/right send `Cmd+[` / `Cmd+]` for back/forward page navigation; because the Azoteq driver only emits swipe buttons for 3-finger movement, those bindings *are* the page navigation and blanking them silently removes it. Down stays unbound since every other Mission Control shortcut is unchecked on this Mac. The driver emits horizontal and vertical events independently, so swipe reasonably straight to avoid firing two shortcuts at once; `three-finger-swipe-throttle-ms` keeps one motion from repeating.
 - **Invert scroll / trackpad settings**: the `tps43_trackpad` node in [boards/shields/toucan/toucan_right.overlay](boards/shields/toucan/toucan_right.overlay).
-  `sensitivity` is bumped from the driver default (100) to 150 to get closer to this Mac's "Fast" tracking-speed
-  setting. Tap-to-click (`single-tap`) and two-finger-tap-to-right-click (`two-finger-tap`) already match System
+  `sensitivity` is dialled down from the driver default (100) to 80, since 150 stacked with macOS's own pointer
+  acceleration and made the small pad too twitchy for precise targeting. Tap-to-click (`single-tap`) and two-finger-tap-to-right-click (`two-finger-tap`) already match System
   Settings 1:1. There's no firmware equivalent for Force Click/haptic feedback or click-pressure firmness --
   this is a flat capacitive trackpad with no physical click mechanism or haptic actuator, so those macOS settings
   have no analog here.
