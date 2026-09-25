@@ -13,7 +13,8 @@ leaves the trackpad completely dead since the wrong driver is loaded).
 - **Keymap**: [config/toucan.keymap](config/toucan.keymap), ported from my
   [ZMK-TOTEMIST](https://github.com/colincreasman/ZMK-TOTEMIST) config (homerow mods, thumb hold-taps, layer-tap,
   ESC combos). This 36-key Toucan2 omits the shield matrix's six outer-column switch positions, so those positions
-  remain `&none`. Holding both inner thumbs activates dedicated maintenance layer 3: Bluetooth profiles stay in
+  remain `&none`. Holding both far outer thumbs activates dedicated maintenance layer 3 without conflicting with
+  the center Shift + L1 thumb chord: Bluetooth profiles stay in
   their previous left-hand positions, Bluetooth clear moves one key inward to `W`, and 2-second bootloader holds
   live on the real top pinkies (`Q` for the left half and `P` for the right). `layer_four` remains the mouse-click
   layer because `is_touching_processor` in `toucan.dtsi` hardcodes `&mo 4` while the trackpad is touched.
