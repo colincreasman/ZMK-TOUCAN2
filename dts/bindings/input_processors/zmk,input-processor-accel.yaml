@@ -1,0 +1,72 @@
+# Copyright (c) 2026 Colin Creasman
+# SPDX-License-Identifier: MIT
+
+description: |
+  Velocity-based pointer acceleration with a movement activation gate.
+
+  At or below speed-threshold the raw delta is scaled by min-factor, so deliberate
+  slow movement stays precise. Between speed-threshold and speed-max the factor
+  follows acceleration-exponent up to max-factor, so a longer/faster stroke covers
+  far more screen without raising the baseline sensitivity.
+
+  Movement is suppressed entirely until activation-distance counts of travel have
+  accumulated since the finger last left the pad, so brushing the trackpad while
+  typing cannot nudge the cursor.
+
+compatible: "zmk,input-processor-accel"
+
+include: ip_zero_param.yaml
+
+properties:
+  type:
+    type: int
+    default: 2 # INPUT_EV_REL
+    description: Input event type to accelerate.
+
+  codes:
+    type: array
+    required: true
+    description: Event codes to accelerate, typically INPUT_REL_X and INPUT_REL_Y.
+
+  min-factor:
+    type: int
+    default: 1000
+    description: >
+      Factor (x1000) applied at or below speed-threshold. 1000 = 1.0x.
+      Values under 1000 make slow movement finer than the raw report.
+
+  max-factor:
+    type: int
+    default: 3000
+    description: Factor (x1000) applied at or above speed-max.
+
+  speed-threshold:
+    type: int
+    default: 500
+    description: Speed in counts/second at or below which min-factor is applied.
+
+  speed-max:
+    type: int
+    default: 3000
+    description: Speed in counts/second at which max-factor is reached.
+
+  acceleration-exponent:
+    type: int
+    default: 2
+    description: >
+      Shape of the curve between the two speeds. 1 is linear, 2 quadratic,
+      3 cubic. Higher values keep the pointer slow for longer before ramping.
+
+  activation-distance:
+    type: int
+    default: 0
+    description: >
+      Counts of accumulated travel required after a new touch before any movement
+      is emitted. 0 disables the gate.
+
+  activation-reset-ms:
+    type: int
+    default: 300
+    description: >
+      Idle gap between movement reports that re-arms the activation gate, used as
+      a fallback if a touch-release event is ever missed.

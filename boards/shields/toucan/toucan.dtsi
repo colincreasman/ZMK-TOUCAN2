@@ -110,6 +110,39 @@
             track-remainders;
         };
 
+        // Pointer acceleration plus a movement activation gate. This runs FIRST
+        // in trackpad_listener's chain for two reasons: it should shape the raw
+        // deltas before anything else looks at them, and it needs to observe
+        // INPUT_BTN_TOUCH, which is_touching_processor consumes with
+        // ZMK_INPUT_PROC_STOP before later processors ever see it.
+        //
+        //   - activation-distance: the first 8 counts of travel after each new
+        //     touch are swallowed, so resting or brushing a finger while typing
+        //     cannot nudge the cursor. It re-arms on every finger lift.
+        //   - min-factor 800 keeps slow movement at 0.8x, which lands at the
+        //     same deliberate, "sluggish" feel as the old bare sensitivity = 80
+        //     now that the driver runs at its 100 baseline again.
+        //   - Past speed-threshold the factor climbs on a quadratic curve to
+        //     4.5x at speed-max, so a longer stroke crosses the screen without
+        //     making fine positioning twitchy.
+        //
+        // track-remainders is required: with min-factor below 1.0 the sub-count
+        // fractions would otherwise be truncated away and slow drags would stall.
+        pointer_accel: pointer_accel {
+            compatible = "zmk,input-processor-accel";
+            #input-processor-cells = <0>;
+            type = <INPUT_EV_REL>;
+            codes = <INPUT_REL_X INPUT_REL_Y>;
+            track-remainders;
+            min-factor = <800>;
+            max-factor = <4500>;
+            speed-threshold = <400>;
+            speed-max = <2200>;
+            acceleration-exponent = <2>;
+            activation-distance = <8>;
+            activation-reset-ms = <300>;
+        };
+
         is_touching_processor:is_touching_processor {
             compatible = "zmk,input-processor-behaviors";
             #input-processor-cells = <0>;
@@ -190,7 +223,7 @@
         // toucan_right.overlay, `zoom;` removed), so it would never fire
         // anyway. Left in the tree (unreferenced) rather than deleted, in
         // case zoom is ever re-enabled.
-        input-processors = <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 100>, <&is_touching_processor>, <&swipe_button_mapper>;
+        input-processors = <&pointer_accel>, <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 100>, <&is_touching_processor>, <&swipe_button_mapper>;
         scroller {
             layers = <1 2>;
             input-processors = <
