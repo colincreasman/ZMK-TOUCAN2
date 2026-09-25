@@ -28,14 +28,18 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   [src/input_processor_accel.c](src/input_processor_accel.c) and configured on the `pointer_accel` node in
   [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi). It exists because a single flat
   `sensitivity` multiplier forces a choice between precise-but-slow and fast-but-twitchy. Instead:
-  - `activation-distance = <8>` swallows the first 8 counts of travel after each new touch, so resting or brushing
+  - `activation-distance = <5>` swallows the first 5 counts of travel after each new touch, so resting or brushing
     a finger while typing cannot nudge the cursor. The gate re-arms on every finger lift, which the processor
     detects by watching `INPUT_BTN_TOUCH` -- this is why `pointer_accel` must be the *first* entry in the
     listener's `input-processors`, since `is_touching_processor` consumes that event with `ZMK_INPUT_PROC_STOP`.
   - `min-factor = <800>` keeps slow movement at 0.8x for deliberate, fine positioning.
-  - Past `speed-threshold` the factor climbs a quadratic curve to `max-factor` (4.5x) at `speed-max`, so a longer
+  - Past `speed-threshold` the factor climbs a quadratic curve to `max-factor` (3.0x) at `speed-max`, so a longer
     stroke crosses the screen quickly.
   - `track-remainders` is required, since a sub-1.0 `min-factor` would otherwise truncate slow drags to nothing.
+  - Speed is measured **per axis**. X and Y are delivered as two separate events from the same report, so a single
+    shared timestamp measures ~0ms elapsed for whichever axis is processed second and computes an enormous speed,
+    pinning that axis at `max-factor` while the other stays near `min-factor`. That made diagonal movement veer
+    wildly and the pointer feel uncontrollably fast.
 
   Tuning: raise `min-factor` if slow movement feels too heavy, raise `max-factor` or lower `speed-max` for a more
   aggressive ramp, and raise `activation-distance` if stray cursor movement still sneaks through while typing. Tap-to-click (`single-tap`) and two-finger-tap-to-right-click (`two-finger-tap`) already match System

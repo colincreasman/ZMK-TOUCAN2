@@ -123,9 +123,15 @@
         //     same deliberate, "sluggish" feel as the old bare sensitivity = 80
         //     now that the driver runs at its 100 baseline again.
         //   - Past speed-threshold the factor climbs on a quadratic curve to
-        //     4.5x at speed-max, so a longer stroke crosses the screen without
-        //     making fine positioning twitchy.
+        //     2.2x at speed-max. The quadratic keeps almost the whole low range
+        //     near min-factor, so only a genuinely long stroke speeds up. The
+        //     thresholds are deliberately conservative: if the pad reports
+        //     slower than expected the curve degrades to a flat 0.8x rather
+        //     than overshooting.
         //
+        // If the pointer ever needs to go back to plain, unshaped movement,
+        // drop &pointer_accel from trackpad_listener's input-processors below;
+        // the driver's `sensitivity` then applies on its own.
         // track-remainders is required: with min-factor below 1.0 the sub-count
         // fractions would otherwise be truncated away and slow drags would stall.
         pointer_accel: pointer_accel {
@@ -135,11 +141,11 @@
             codes = <INPUT_REL_X INPUT_REL_Y>;
             track-remainders;
             min-factor = <800>;
-            max-factor = <4500>;
-            speed-threshold = <400>;
-            speed-max = <2200>;
+            max-factor = <2200>;
+            speed-threshold = <500>;
+            speed-max = <3000>;
             acceleration-exponent = <2>;
-            activation-distance = <8>;
+            activation-distance = <5>;
             activation-reset-ms = <300>;
         };
 
