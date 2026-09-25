@@ -34,3 +34,13 @@ config ZMK_INPUT_PROCESSOR_SCROLL_SHORTCUT
     help
       Turns accumulated travel on a relative scroll axis into a single key-combo
       actuation per gesture.
+
+DT_COMPAT_ZMK_INPUT_PROCESSOR_ROTATE := zmk,input-processor-rotate
+
+config ZMK_INPUT_PROCESSOR_ROTATE
+    bool "Pointer rotation input processor"
+    default $(dt_compat_enabled,$(DT_COMPAT_ZMK_INPUT_PROCESSOR_ROTATE))
+    depends on ZMK_POINTING
+    help
+      Rotates relative pointer movement by a fixed angle to compensate for a
+      trackpad that is physically mounted at an angle to the keyboard.
