@@ -1,0 +1,5 @@
+config ZMK_BEHAVIOR_LONG_PRESS
+    bool "Long-press behavior"
+    default y
+    help
+      Invoke a behavior only after its key remains held for a configured duration.
