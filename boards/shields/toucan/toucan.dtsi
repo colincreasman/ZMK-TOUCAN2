@@ -149,6 +149,32 @@
             activation-reset-ms = <300>;
         };
 
+        // Collapses the driver's raw swipe samples into one correctly-directed
+        // actuation per gesture. The driver picks a direction from the first
+        // nonzero delta of a gesture and reports each axis independently, so
+        // fingers settling at touchdown can fire the wrong axis; its throttle
+        // then blocks the real direction for the rest of the window. That is
+        // why a clean 3-finger up swipe lands instantly while a left/right one
+        // is hard to trigger and hard to retry.
+        //
+        // three-finger-swipe-throttle-ms is turned down to 40 in
+        // toucan_right.overlay so this node sees a stream of samples rather
+        // than a single noisy one. It stays silent until one axis leads the
+        // other by `lead` samples, emits exactly one press/release pair in the
+        // winning direction, then blocks until the fingers lift. Net effect for
+        // an unambiguous swipe is one actuation, same as before, about 40ms
+        // later; retries no longer have to wait out a 1200ms lockout.
+        //
+        // To restore the old raw behavior: drop &swipe_arbiter from the
+        // pipeline below and set the throttle back to 1200.
+        swipe_arbiter: swipe_arbiter {
+            compatible = "zmk,input-processor-swipe-arbiter";
+            #input-processor-cells = <0>;
+            lead = <2>;
+            max-samples = <8>;
+            reset-ms = <400>;
+        };
+
         is_touching_processor:is_touching_processor {
             compatible = "zmk,input-processor-behaviors";
             #input-processor-cells = <0>;
@@ -229,7 +255,7 @@
         // toucan_right.overlay, `zoom;` removed), so it would never fire
         // anyway. Left in the tree (unreferenced) rather than deleted, in
         // case zoom is ever re-enabled.
-        input-processors = <&pointer_accel>, <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 100>, <&is_touching_processor>, <&swipe_button_mapper>;
+        input-processors = <&pointer_accel>, <&swipe_arbiter>, <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 100>, <&is_touching_processor>, <&swipe_button_mapper>;
         scroller {
             layers = <1 2>;
             input-processors = <

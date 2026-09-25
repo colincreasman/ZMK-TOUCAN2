@@ -94,7 +94,11 @@
         press-and-hold;
         //swipes;
         three-finger-swipe;
-        three-finger-swipe-throttle-ms = <1200>;
+        // Turned down from 1200 so swipe_arbiter (see toucan.dtsi) receives a
+        // stream of direction samples to pick the dominant axis from. The
+        // arbiter enforces one actuation per gesture, so this no longer needs
+        // to suppress repeats on its own. Restore 1200 if the arbiter is removed.
+        three-finger-swipe-throttle-ms = <40>;
         switch-xy;
         invert-scroll-y;
 

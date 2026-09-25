@@ -21,6 +21,18 @@ leaves the trackpad completely dead since the wrong driver is loaded).
 - **General configs**: [boards/shields/toucan/toucan_left.conf](boards/shields/toucan/toucan_left.conf) and [boards/shields/toucan/toucan_right.conf](boards/shields/toucan/toucan_right.conf)
 - **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) maps standalone 3-finger swipes. Up sends `Option+\`` -- this Mac remaps Mission Control to `Opt+\`` under System Settings > Keyboard > Keyboard Shortcuts > Mission Control, so the `Ctrl+Up` default does nothing here. Left/right drive [AltTab](https://alt-tab-macos.netlify.app/), mirroring the "3-finger Horizontal Swipe" trigger set up on this Mac's built-in trackpad: right sends `Opt+Tab` (next window) and left sends `Opt+Shift+Tab` (previous window), matching AltTab's Shortcut 1. Because the firmware sends a discrete press/release, one swipe steps one window instead of holding the switcher open. Down stays unbound since every other Mission Control shortcut is unchecked on this Mac. The driver emits horizontal and vertical events independently, so swipe reasonably straight to avoid firing two shortcuts at once; `three-finger-swipe-throttle-ms` (1200ms) keeps one motion from repeating and therefore also caps how quickly swipes can be repeated.
 - **Page navigation**: the 3-finger left/right swipe used to send `Cmd+[` / `Cmd+]`, but that slot now belongs to AltTab. Browser back/forward is still available through macOS's native "Swipe between pages" gesture, which acts on the two-finger horizontal scroll the driver already reports as `INPUT_REL_HWHEEL` -- set System Settings > Trackpad > More Gestures > Swipe between pages to an option that includes two fingers.
+- **Three-finger swipe arbitration**: a second local processor, `zmk,input-processor-swipe-arbiter`
+  ([src/input_processor_swipe_arbiter.c](src/input_processor_swipe_arbiter.c), configured on the `swipe_arbiter`
+  node). The Azoteq driver commits to a swipe direction from the *first* nonzero delta of a gesture and reports
+  each axis independently, so fingers settling at touchdown can fire the wrong axis; its throttle then blocks the
+  real direction for the rest of the window. That is why a clean up-swipe lands instantly while left/right is hard
+  to trigger and hard to retry. With `three-finger-swipe-throttle-ms` turned down to 40 the arbiter sees a stream
+  of samples, stays silent until one axis leads the other by `lead` samples, emits exactly one press/release pair
+  in the winning direction, then blocks until the fingers lift. An unambiguous swipe still produces exactly one
+  actuation, roughly 40ms later than before, and retries no longer wait out a 1200ms lockout.
+
+  To revert to the raw driver behavior: drop `&swipe_arbiter` from the listener's `input-processors` and set
+  `three-finger-swipe-throttle-ms` back to `1200`.
 - **Invert scroll / trackpad settings**: the `tps43_trackpad` node in [boards/shields/toucan/toucan_right.overlay](boards/shields/toucan/toucan_right.overlay).
   `sensitivity` sits at the driver's 100 baseline; the feel of the pointer is shaped by the `pointer_accel` input
   processor instead (see below).

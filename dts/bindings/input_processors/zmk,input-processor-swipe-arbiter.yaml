@@ -1,0 +1,45 @@
+# Copyright (c) 2026 Colin Creasman
+# SPDX-License-Identifier: MIT
+
+description: |
+  Arbitrates raw three-finger swipe button events into a single, correctly
+  directed actuation per gesture.
+
+  The Azoteq driver decides a swipe direction from the first nonzero delta of a
+  gesture and reports each axis independently, so the fingers settling at
+  touchdown can fire the wrong axis. Its own throttle then blocks the real
+  direction for the rest of the window, which is why an off-axis swipe is hard
+  to land while a clean one feels instant.
+
+  With the driver throttle turned down this processor sees a stream of direction
+  samples instead. It suppresses them until one axis leads the other by `lead`
+  samples, emits exactly one press/release pair in the winning direction, then
+  stays silent until the fingers leave the pad.
+
+compatible: "zmk,input-processor-swipe-arbiter"
+
+include: ip_zero_param.yaml
+
+properties:
+  lead:
+    type: int
+    default: 2
+    description: >
+      How far ahead one axis must be before a direction is committed. 1 reacts
+      fastest but keeps more of the driver's touchdown noise; higher values
+      reject more noise at the cost of a little latency.
+
+  max-samples:
+    type: int
+    default: 8
+    description: >
+      Fallback cap. Once this many samples have been seen the current leader is
+      committed even without a full lead, so a sloppy diagonal still actuates
+      rather than being silently dropped.
+
+  reset-ms:
+    type: int
+    default: 400
+    description: >
+      Idle gap between swipe samples that ends the gesture, used as a fallback
+      if a touch-release event is ever missed.
