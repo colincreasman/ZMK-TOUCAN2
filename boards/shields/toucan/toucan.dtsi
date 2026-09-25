@@ -118,16 +118,27 @@
             bindings  = <&mo 4>;            // Activate Layer 4 while held &mo 4
         };
 
-        // 3-finger swipe directions, tuned to match this Mac's actual System
-        // Settings > Trackpad gestures (see git history for the screenshots):
-        //   - Mission Control: ON ("Swipe Up with Three Fingers") -> Ctrl+Up,
-        //     macOS's actual default Mission Control shortcut (not Ctrl+Cmd+Up).
-        //   - Left/right/down are no-ops. The driver reports each nonzero axis
-        //     independently, so a mostly vertical swipe with slight horizontal
-        //     drift can emit both directions. Keeping the other directions
-        //     unbound prevents page-navigation shortcuts from interfering with
-        //     Mission Control. Two-finger scrolling/page navigation is handled
-        //     separately by the normal scroll path.
+        // 3-finger swipe shortcuts. These come from the driver's
+        // `three-finger-swipe` path (enabled in toucan_right.overlay);
+        // `swipes` stays off there, so ordinary 1-finger cursor flicks can
+        // never fire any of these.
+        //
+        //   - Up -> Option+Grave. This Mac's Mission Control shortcut is
+        //     remapped to Opt+` in System Settings > Keyboard > Keyboard
+        //     Shortcuts > Mission Control, NOT the Ctrl+Up default, so Ctrl+Up
+        //     did nothing at all here.
+        //   - Left/right -> Cmd+[ / Cmd+] (back/forward page navigation).
+        //     The driver only emits swipe buttons for 3-finger movement, so
+        //     these bindings *are* the page navigation; blanking them silently
+        //     removes it.
+        //   - Down is left unbound: every other Mission Control shortcut
+        //     ("Application windows" = Ctrl+Down, "Show Desktop" = F11) is
+        //     unchecked on this Mac, so there is nothing useful to send.
+        //
+        // The driver reports each nonzero axis independently, so a strongly
+        // diagonal swipe can emit a vertical *and* a horizontal shortcut in the
+        // same actuation. Swipe reasonably straight; the 1200ms throttle in
+        // toucan_right.overlay keeps one motion from repeating.
         swipe_button_mapper: swipe_button_mapper {
             compatible = "zmk,input-processor-behaviors";
             #input-processor-cells = <0>;
@@ -135,7 +146,7 @@
 #ifdef TOUCAN_WIN_MODE
             bindings = <&kp LG(TAB)>, <&kp LG(RIGHT)>, <&kp LG(D)>, <&kp LG(LEFT)>;
 #else
-            bindings = <&kp LC(UP)>, <&none>, <&none>, <&none>;
+            bindings = <&kp LA(GRAVE)>, <&kp LG(RBKT)>, <&none>, <&kp LG(LBKT)>;
 #endif
         };
     };
