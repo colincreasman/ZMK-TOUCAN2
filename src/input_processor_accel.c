@@ -36,8 +36,14 @@ struct accel_config {
     uint16_t codes[];
 };
 
+#define ACCEL_MAX_CODES 4
+
 struct accel_data {
-    int64_t last_event_ms;
+    // Per-axis timestamps. X and Y arrive as two separate events from the *same*
+    // report, so one shared timestamp measures ~0ms for whichever axis is handled
+    // second and computes an enormous speed, pinning that axis at max-factor.
+    int64_t last_ms[ACCEL_MAX_CODES];
+    int64_t last_activity_ms;
     uint32_t travel;
     bool active;
 };
@@ -69,6 +75,12 @@ static uint32_t accel_factor(const struct accel_config *cfg, uint32_t cps) {
 static void accel_rearm(struct accel_data *data) {
     data->travel = 0;
     data->active = false;
+
+    // Drop per-axis history so the next stroke is timed from scratch and starts
+    // at min-factor rather than inheriting the speed of the previous one.
+    for (size_t i = 0; i < ACCEL_MAX_CODES; i++) {
+        data->last_ms[i] = 0;
+    }
 }
 
 static int accel_handle_event(const struct device *dev, struct input_event *event, uint32_t param1,
@@ -94,9 +106,11 @@ static int accel_handle_event(const struct device *dev, struct input_event *even
         return ZMK_INPUT_PROC_CONTINUE;
     }
 
+    size_t idx = 0;
     bool tracked = false;
-    for (size_t i = 0; i < cfg->codes_len; i++) {
+    for (size_t i = 0; i < cfg->codes_len && i < ACCEL_MAX_CODES; i++) {
         if (cfg->codes[i] == event->code) {
+            idx = i;
             tracked = true;
             break;
         }
@@ -107,13 +121,13 @@ static int accel_handle_event(const struct device *dev, struct input_event *even
     }
 
     const int64_t now = k_uptime_get();
-    int64_t delta_ms = (data->last_event_ms > 0) ? (now - data->last_event_ms) : 0;
 
-    if (cfg->activation_reset_ms > 0 && delta_ms > (int64_t)cfg->activation_reset_ms) {
+    if (cfg->activation_reset_ms > 0 && data->last_activity_ms > 0 &&
+        (now - data->last_activity_ms) > (int64_t)cfg->activation_reset_ms) {
         accel_rearm(data);
     }
 
-    data->last_event_ms = now;
+    data->last_activity_ms = now;
 
     if (event->value == 0) {
         return ZMK_INPUT_PROC_CONTINUE;
@@ -132,11 +146,14 @@ static int accel_handle_event(const struct device *dev, struct input_event *even
         data->active = true;
     }
 
-    if (delta_ms <= 0) {
-        delta_ms = 1;
-    } else if (delta_ms > 100) {
-        delta_ms = 100;
+    // Measure this axis against its own previous report. With no history yet,
+    // assume the slowest bucket so every stroke opens gently instead of
+    // launching at max-factor.
+    int64_t delta_ms = 100;
+    if (data->last_ms[idx] > 0) {
+        delta_ms = CLAMP(now - data->last_ms[idx], 1, 100);
     }
+    data->last_ms[idx] = now;
 
     const uint32_t cps = (uint32_t)(((uint64_t)magnitude * 1000U) / (uint64_t)delta_ms);
     const uint32_t factor = accel_factor(cfg, cps);
