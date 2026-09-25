@@ -175,6 +175,33 @@
             reset-ms = <400>;
         };
 
+        // Two-finger horizontal swipe -> browser/editor back and forward.
+        //
+        // The driver only reports swipe buttons for THREE-finger movement, so a
+        // two-finger horizontal swipe arrives here as plain scroll on
+        // INPUT_REL_HWHEEL. Sending that as a horizontal wheel does not produce
+        // page navigation on macOS (that is a native trackpad gesture, not a
+        // wheel event), so it is turned into real Cmd+[ / Cmd+] keystrokes,
+        // which also work in VS Code and anywhere else those are bound.
+        //
+        // This sits before zip_scroll_scaler so it sees raw counts rather than
+        // the 1/100-damped value, and fires at most once per gesture: the
+        // remaining travel is swallowed so a long swipe navigates one page
+        // instead of several. Swap the two bindings if the directions come out
+        // reversed.
+        hscroll_shortcut: hscroll_shortcut {
+            compatible = "zmk,input-processor-scroll-shortcut";
+            #input-processor-cells = <0>;
+            event-code = <INPUT_REL_HWHEEL>;
+            threshold = <120>;
+            reset-ms = <300>;
+#ifdef TOUCAN_WIN_MODE
+            bindings = <&kp LA(LEFT)>, <&kp LA(RIGHT)>;
+#else
+            bindings = <&kp LG(LBKT)>, <&kp LG(RBKT)>;
+#endif
+        };
+
         is_touching_processor:is_touching_processor {
             compatible = "zmk,input-processor-behaviors";
             #input-processor-cells = <0>;
@@ -255,7 +282,7 @@
         // toucan_right.overlay, `zoom;` removed), so it would never fire
         // anyway. Left in the tree (unreferenced) rather than deleted, in
         // case zoom is ever re-enabled.
-        input-processors = <&pointer_accel>, <&swipe_arbiter>, <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 100>, <&is_touching_processor>, <&swipe_button_mapper>;
+        input-processors = <&pointer_accel>, <&swipe_arbiter>, <&hscroll_shortcut>, <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 100>, <&is_touching_processor>, <&swipe_button_mapper>;
         scroller {
             layers = <1 2>;
             input-processors = <

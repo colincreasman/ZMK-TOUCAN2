@@ -20,7 +20,16 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   layer because `is_touching_processor` in `toucan.dtsi` hardcodes `&mo 4` while the trackpad is touched.
 - **General configs**: [boards/shields/toucan/toucan_left.conf](boards/shields/toucan/toucan_left.conf) and [boards/shields/toucan/toucan_right.conf](boards/shields/toucan/toucan_right.conf)
 - **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) maps standalone 3-finger swipes. Up sends `Option+\`` -- this Mac remaps Mission Control to `Opt+\`` under System Settings > Keyboard > Keyboard Shortcuts > Mission Control, so the `Ctrl+Up` default does nothing here. Left/right drive [AltTab](https://alt-tab-macos.netlify.app/), mirroring the "3-finger Horizontal Swipe" trigger set up on this Mac's built-in trackpad: right sends `Opt+Tab` (next window) and left sends `Opt+Shift+Tab` (previous window), matching AltTab's Shortcut 1. Because the firmware sends a discrete press/release, one swipe steps one window instead of holding the switcher open. Down stays unbound since every other Mission Control shortcut is unchecked on this Mac. The driver emits horizontal and vertical events independently, so swipe reasonably straight to avoid firing two shortcuts at once; `three-finger-swipe-throttle-ms` (1200ms) keeps one motion from repeating and therefore also caps how quickly swipes can be repeated.
-- **Page navigation**: the 3-finger left/right swipe used to send `Cmd+[` / `Cmd+]`, but that slot now belongs to AltTab. Browser back/forward is still available through macOS's native "Swipe between pages" gesture, which acts on the two-finger horizontal scroll the driver already reports as `INPUT_REL_HWHEEL` -- set System Settings > Trackpad > More Gestures > Swipe between pages to an option that includes two fingers.
+- **Page navigation**: the 3-finger left/right swipe used to send `Cmd+[` / `Cmd+]`, but that slot now belongs to
+  AltTab. Back/forward moved to a **two-finger** horizontal swipe via the `hscroll_shortcut` node
+  ([src/input_processor_scroll_shortcut.c](src/input_processor_scroll_shortcut.c)). The driver only reports swipe
+  buttons for three-finger movement, so a two-finger swipe arrives as plain scroll on `INPUT_REL_HWHEEL`; simply
+  forwarding that as a horizontal wheel does *not* trigger macOS page navigation, since that is a native trackpad
+  gesture rather than a wheel event. The processor therefore accumulates the axis and emits real `Cmd+[` / `Cmd+]`
+  keystrokes, which also work in VS Code and anywhere else those are bound. It sits before `zip_scroll_scaler` so
+  it sees raw counts instead of the 1/100-damped value, and fires at most once per gesture -- the rest of the
+  stroke is swallowed so a long swipe navigates one page instead of several. Swap the two `bindings` if the
+  directions come out reversed; raise/lower `threshold` to tune how deliberate the swipe must be.
 - **Three-finger swipe arbitration**: a second local processor, `zmk,input-processor-swipe-arbiter`
   ([src/input_processor_swipe_arbiter.c](src/input_processor_swipe_arbiter.c), configured on the `swipe_arbiter`
   node). The Azoteq driver commits to a swipe direction from the *first* nonzero delta of a gesture and reports

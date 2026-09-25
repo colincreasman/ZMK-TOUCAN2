@@ -24,3 +24,13 @@ config ZMK_INPUT_PROCESSOR_SWIPE_ARBITER
     help
       Collapses a stream of raw swipe direction samples into a single actuation
       in the dominant direction.
+
+DT_COMPAT_ZMK_INPUT_PROCESSOR_SCROLL_SHORTCUT := zmk,input-processor-scroll-shortcut
+
+config ZMK_INPUT_PROCESSOR_SCROLL_SHORTCUT
+    bool "Scroll-to-shortcut input processor"
+    default $(dt_compat_enabled,$(DT_COMPAT_ZMK_INPUT_PROCESSOR_SCROLL_SHORTCUT))
+    depends on ZMK_POINTING
+    help
+      Turns accumulated travel on a relative scroll axis into a single key-combo
+      actuation per gesture.

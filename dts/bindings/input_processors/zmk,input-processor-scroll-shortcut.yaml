@@ -1,0 +1,48 @@
+# Copyright (c) 2026 Colin Creasman
+# SPDX-License-Identifier: MIT
+
+description: |
+  Turns a relative scroll axis into a single key-combo actuation per gesture.
+
+  The Azoteq driver only reports swipe buttons for three-finger movement; a
+  two-finger swipe arrives as ordinary scroll on INPUT_REL_HWHEEL. This
+  processor accumulates that axis and, once `threshold` counts of travel have
+  built up in one direction, invokes one of two bindings exactly once. It then
+  stays quiet until the fingers leave the pad, so a long swipe navigates one
+  page rather than several.
+
+  The triggering scroll delta is consumed, so a gesture that fires a shortcut
+  does not also scroll the page sideways.
+
+compatible: "zmk,input-processor-scroll-shortcut"
+
+include: ip_zero_param.yaml
+
+properties:
+  event-code:
+    type: int
+    default: 6 # INPUT_REL_HWHEEL
+    description: Relative axis to watch.
+
+  threshold:
+    type: int
+    default: 120
+    description: >
+      Counts of accumulated travel in one direction before the matching binding
+      fires. Raise it if the gesture triggers too easily, lower it if a normal
+      swipe is not enough.
+
+  reset-ms:
+    type: int
+    default: 300
+    description: >
+      Idle gap that ends the gesture, used as a fallback if a touch-release
+      event is ever missed.
+
+  bindings:
+    type: phandle-array
+    required: true
+    description: >
+      Exactly two behaviors. The first fires on negative travel (swipe left),
+      the second on positive travel (swipe right). Swap them if the directions
+      come out reversed on your hardware.
