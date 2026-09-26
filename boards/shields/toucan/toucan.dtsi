@@ -112,13 +112,13 @@
 
         // Compensates for the trackpad being mounted at an angle. This is
         // beekeeb's "Thumb Angle" variant, where the pad is rotated
-        // COUNTER-CLOCKWISE by about 35 degrees (its top edge rises to the
+        // COUNTER-CLOCKWISE by about 40 degrees (its top edge rises to the
         // right) so it faces the thumb. The alternative "Column Angle" variant
         // mounts the same pad square to the case. Fingers arrive square to the
         // keyboard either way, so on this variant a stroke that feels "straight
         // up" lands on the sensor as a diagonal.
         //
-        // Rotating the reported vector counter-clockwise by the same 35 degrees
+        // Rotating the reported vector counter-clockwise by the same 40 degrees
         // cancels the mount angle out, making the pad behave like the Column
         // Angle version.
         //
@@ -136,7 +136,7 @@
         pointer_rotate: pointer_rotate {
             compatible = "zmk,input-processor-rotate";
             #input-processor-cells = <0>;
-            angle = <35>;
+            angle = <40>;
             x-code = <INPUT_REL_X>;
             y-code = <INPUT_REL_Y>;
             reset-ms = <300>;
