@@ -251,18 +251,14 @@
         //     remapped to Opt+` in System Settings > Keyboard > Keyboard
         //     Shortcuts > Mission Control, NOT the Ctrl+Up default, so Ctrl+Up
         //     did nothing at all here.
-        //   - Left/right -> AltTab (the third-party app), matching the
-        //     "3-finger Horizontal Swipe" trigger configured on this Mac's
-        //     built-in trackpad. AltTab's Shortcut 1 is Opt+Tab, so right
-        //     sends Opt+Tab (next window) and left sends Opt+Shift+Tab
-        //     (previous window). Firmware sends a discrete press/release, so
-        //     one swipe = one window step rather than a held-open switcher.
-        //
-        //     This replaces the previous Cmd+[ / Cmd+] page navigation. Browser
-        //     back/forward is still reachable from macOS's native "Swipe between
-        //     pages" gesture, which reads the two-finger horizontal scroll the
-        //     driver already emits as INPUT_REL_HWHEEL, as long as that setting
-        //     includes the two-finger variant.
+        //   - Left/right -> macOS window cycling: Cmd+` (next window) and
+        //     Cmd+Shift+` (previous window), matching the mouse thumb-button
+        //     mapping. These replaced AltTab's Opt+Tab / Opt+Shift+Tab, which
+        //     could not work from a swipe: AltTab only interprets Shift+Tab
+        //     while its switcher is already open, so a standalone
+        //     Opt+Shift+Tab just leaked the raw keystroke to the focused app.
+        //     The Cmd+` pair is stateless, so one discrete press/release does
+        //     the whole job.
         //   - Down is left unbound: every other Mission Control shortcut
         //     ("Application windows" = Ctrl+Down, "Show Desktop" = F11) is
         //     unchecked on this Mac, so there is nothing useful to send.
@@ -278,7 +274,7 @@
 #ifdef TOUCAN_WIN_MODE
             bindings = <&kp LG(TAB)>, <&kp LG(RIGHT)>, <&kp LG(D)>, <&kp LG(LEFT)>;
 #else
-            bindings = <&kp LA(GRAVE)>, <&kp LA(TAB)>, <&none>, <&kp LA(LS(TAB))>;
+            bindings = <&kp LA(GRAVE)>, <&kp LG(GRAVE)>, <&none>, <&kp LG(LS(GRAVE))>;
 #endif
         };
     };
