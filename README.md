@@ -60,13 +60,13 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   To revert to the raw driver behavior: drop `&swipe_arbiter` from the listener's `input-processors` and set
   `three-finger-swipe-throttle-ms` back to `1200`.
 - **Pointer rotation**: this is beekeeb's **"Thumb Angle"** trackpad variant, where the pad is mounted rotated
-  **counter-clockwise** by roughly 35 degrees so it faces the thumb. The alternative **"Column Angle"** variant
+  **counter-clockwise** by roughly 40 degrees so it faces the thumb. The alternative **"Column Angle"** variant
   mounts the same pad square to the case. Fingers arrive square to the keyboard either way, so on this variant a
   stroke that feels "straight up" reaches the sensor as a diagonal. The `pointer_rotate` node
   ([src/input_processor_rotate.c](src/input_processor_rotate.c)) rotates the reported X/Y pair to cancel that
   mount angle out, making the pad behave like the Column Angle version.
   - Sign convention: **positive is counter-clockwise on screen**. The correction matches the pad's own
-    counter-clockwise mount, so the default is `angle = <35>`. Flip the sign if the cursor tracks the wrong
+    counter-clockwise mount, so the default is `angle = <40>`. Flip the sign if the cursor tracks the wrong
     diagonal; change the magnitude if the correction is too strong or too weak.
   - It runs first in the chain so the activation gate and acceleration curve both operate in the hand's frame.
   - Rotation needs both axes at once, but they arrive as two separate events. The driver always reports X
