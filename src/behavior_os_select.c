@@ -70,15 +70,22 @@ static const struct behavior_driver_api behavior_os_select_driver_api = {
     .binding_released = on_keymap_binding_released,
 };
 
+#define OS_SELECT_BINDING(n, idx)                                                                  \
+    {                                                                                              \
+        .behavior_dev = DEVICE_DT_NAME(DT_INST_PHANDLE_BY_IDX(n, bindings, idx)),                  \
+        .param1 = COND_CODE_0(DT_INST_PHA_HAS_CELL_AT_IDX(n, bindings, idx, param1), (0),          \
+                              (DT_INST_PHA_BY_IDX(n, bindings, idx, param1))),                     \
+        .param2 = COND_CODE_0(DT_INST_PHA_HAS_CELL_AT_IDX(n, bindings, idx, param2), (0),          \
+                              (DT_INST_PHA_BY_IDX(n, bindings, idx, param2))),                     \
+    }
+
 #define OS_SELECT_INST(n)                                                                          \
-    BUILD_ASSERT(DT_INST_PROP_LEN(n, bindings) == 2,                                               \
-                 "os-select needs exactly two bindings: mac then windows");                        \
     static struct behavior_os_select_data behavior_os_select_data_##n;                             \
     static const struct behavior_os_select_config behavior_os_select_config_##n = {                \
         .bindings =                                                                                \
             {                                                                                      \
-                ZMK_KEYMAP_EXTRACT_BINDING(0, DT_DRV_INST(n)),                                     \
-                ZMK_KEYMAP_EXTRACT_BINDING(1, DT_DRV_INST(n)),                                     \
+                OS_SELECT_BINDING(n, 0),                                                           \
+                OS_SELECT_BINDING(n, 1),                                                           \
             },                                                                                     \
     };                                                                                             \
     BEHAVIOR_DT_INST_DEFINE(n, behavior_os_select_init, NULL, &behavior_os_select_data_##n,        \
