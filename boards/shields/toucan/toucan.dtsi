@@ -219,8 +219,15 @@
         // This sits before zip_scroll_scaler so it sees raw counts rather than
         // the 1/100-damped value, and fires at most once per gesture: the
         // remaining travel is swallowed so a long swipe navigates one page
-        // instead of several. Swap the two bindings if the directions come out
-        // reversed.
+        // instead of several.
+        //
+        // Binding order is (negative travel, positive travel). The pad's
+        // horizontal axis reports the opposite sign to what these shortcuts
+        // expect -- `switch-xy` in toucan_right.overlay remaps the axes at the
+        // hardware level -- so negative travel is a swipe RIGHT. The bindings
+        // are therefore listed forward-then-back rather than back-then-forward.
+        // Cursor movement is unaffected and already tracks correctly, which is
+        // why this is fixed here instead of with the driver's `invert-x`.
         hscroll_shortcut: hscroll_shortcut {
             compatible = "zmk,input-processor-scroll-shortcut";
             #input-processor-cells = <0>;
@@ -228,9 +235,9 @@
             threshold = <120>;
             reset-ms = <300>;
 #ifdef TOUCAN_WIN_MODE
-            bindings = <&kp LA(LEFT)>, <&kp LA(RIGHT)>;
+            bindings = <&kp LA(RIGHT)>, <&kp LA(LEFT)>;
 #else
-            bindings = <&kp LG(LBKT)>, <&kp LG(RBKT)>;
+            bindings = <&kp LG(RBKT)>, <&kp LG(LBKT)>;
 #endif
         };
 
@@ -265,16 +272,23 @@
         //
         // The driver reports each nonzero axis independently, so a strongly
         // diagonal swipe can emit a vertical *and* a horizontal shortcut in the
-        // same actuation. Swipe reasonably straight; the 1200ms throttle in
-        // toucan_right.overlay keeps one motion from repeating.
+        // same actuation. Swipe reasonably straight; the 40ms throttle in
+        // toucan_right.overlay plus swipe_arbiter keep one motion from
+        // repeating.
+        //
+        // EAST/WEST are deliberately crossed: the pad's horizontal axis reports
+        // the opposite sign to the physical swipe direction (`switch-xy` in
+        // toucan_right.overlay remaps the axes in hardware), so the driver's
+        // "EAST" fires on a physical swipe left. NORTH/SOUTH are unaffected,
+        // which is why 3-finger up already tracked correctly.
         swipe_button_mapper: swipe_button_mapper {
             compatible = "zmk,input-processor-behaviors";
             #input-processor-cells = <0>;
             codes = <INPUT_BTN_NORTH INPUT_BTN_EAST INPUT_BTN_SOUTH INPUT_BTN_WEST>;
 #ifdef TOUCAN_WIN_MODE
-            bindings = <&kp LG(TAB)>, <&kp LG(RIGHT)>, <&kp LG(D)>, <&kp LG(LEFT)>;
+            bindings = <&kp LG(TAB)>, <&kp LG(LEFT)>, <&kp LG(D)>, <&kp LG(RIGHT)>;
 #else
-            bindings = <&kp LA(GRAVE)>, <&kp LG(GRAVE)>, <&none>, <&kp LG(LS(GRAVE))>;
+            bindings = <&kp LA(GRAVE)>, <&kp LG(LS(GRAVE))>, <&none>, <&kp LG(GRAVE)>;
 #endif
         };
     };
