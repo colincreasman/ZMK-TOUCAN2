@@ -221,17 +221,30 @@
         // remaining travel is swallowed so a long swipe navigates one page
         // instead of several.
         //
-        // Binding order is (negative travel, positive travel). The pad's
-        // horizontal axis reports the opposite sign to what these shortcuts
-        // expect -- `switch-xy` in toucan_right.overlay remaps the axes at the
-        // hardware level -- so negative travel is a swipe RIGHT. The bindings
-        // are therefore listed forward-then-back rather than back-then-forward.
-        // Cursor movement is unaffected and already tracks correctly, which is
-        // why this is fixed here instead of with the driver's `invert-x`.
+        // `angle` matches pointer_rotate, and for the same reason: the pad is
+        // mounted at an angle, so a swipe that is horizontal to the hand is a
+        // diagonal to the sensor. Without it you have to swipe along the pad's
+        // physical axis while the cursor uses the hand's axis, which is the
+        // mismatch this fixes. The gesture itself is decided in the driver for
+        // three-finger swipes, but two-finger swipes arrive as plain scroll, so
+        // they can still be rotated here.
+        //
+        // The driver reports only the dominant axis per sample, so both axes
+        // are accumulated across the gesture to reconstruct the direction.
+        // Vertical events pass through untouched, keeping normal scrolling
+        // intact, and firing requires the rotated horizontal component to beat
+        // the vertical one so scrolling can never trip it.
+        //
+        // y-invert undoes the driver's `invert-scroll-y` so the rotation sees
+        // the same orientation as the pointer axes. Binding order is
+        // (negative, positive) on the rotated axis.
         hscroll_shortcut: hscroll_shortcut {
             compatible = "zmk,input-processor-scroll-shortcut";
             #input-processor-cells = <0>;
             event-code = <INPUT_REL_HWHEEL>;
+            y-event-code = <INPUT_REL_WHEEL>;
+            y-invert;
+            angle = <40>;
             threshold = <120>;
             reset-ms = <300>;
 #ifdef TOUCAN_WIN_MODE
