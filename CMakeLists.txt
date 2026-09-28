@@ -17,3 +17,15 @@ target_sources_ifdef(CONFIG_ZMK_INPUT_PROCESSOR_SCROLL_SHORTCUT app PRIVATE
 target_sources_ifdef(CONFIG_ZMK_INPUT_PROCESSOR_ROTATE app PRIVATE
     src/input_processor_rotate.c
 )
+
+target_sources_ifdef(CONFIG_TOUCAN_OS_MODE app PRIVATE
+    src/toucan_os_mode.c
+)
+
+target_sources_ifdef(CONFIG_ZMK_BEHAVIOR_OS_SELECT app PRIVATE
+    src/behavior_os_select.c
+)
+
+target_sources_ifdef(CONFIG_ZMK_BEHAVIOR_OS_MODE app PRIVATE
+    src/behavior_os_mode.c
+)

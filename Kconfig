@@ -44,3 +44,33 @@ config ZMK_INPUT_PROCESSOR_ROTATE
     help
       Rotates relative pointer movement by a fixed angle to compensate for a
       trackpad that is physically mounted at an angle to the keyboard.
+
+DT_COMPAT_ZMK_BEHAVIOR_OS_SELECT := zmk,behavior-os-select
+DT_COMPAT_ZMK_BEHAVIOR_OS_MODE := zmk,behavior-os-mode
+
+config ZMK_BEHAVIOR_OS_SELECT
+    bool "OS-select behavior"
+    default $(dt_compat_enabled,$(DT_COMPAT_ZMK_BEHAVIOR_OS_SELECT))
+    select TOUCAN_OS_MODE
+    help
+      Invoke one of two bindings depending on the current host-OS mode.
+
+config ZMK_BEHAVIOR_OS_MODE
+    bool "OS-mode behavior"
+    default $(dt_compat_enabled,$(DT_COMPAT_ZMK_BEHAVIOR_OS_MODE))
+    select TOUCAN_OS_MODE
+    help
+      Select or toggle the host-OS mode used by the OS-select behavior.
+
+config TOUCAN_OS_MODE
+    bool
+    help
+      Shared, persisted host-OS mode state. Selected automatically by the
+      behaviors that need it.
+
+config TOUCAN_OS_MODE_DEFAULT_WIN
+    bool "Default to Windows OS mode"
+    depends on TOUCAN_OS_MODE
+    help
+      Power on in Windows mode rather than macOS mode. Only applies until a
+      mode has been stored; after that the saved value wins.

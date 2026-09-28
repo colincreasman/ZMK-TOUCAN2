@@ -1,0 +1,21 @@
+# Copyright (c) 2026 Colin Creasman
+# SPDX-License-Identifier: MIT
+
+description: |
+  Invokes one of two bindings depending on the current host-OS mode.
+
+  Used for the trackpad gestures, which need different shortcuts on macOS and
+  Windows. The choice is made when the binding is pressed, and the same
+  sub-binding is used for the matching release, so switching modes mid-press
+  cannot leave a modifier stuck down.
+
+compatible: "zmk,behavior-os-select"
+
+include: zero_param.yaml
+
+properties:
+  bindings:
+    type: phandle-array
+    required: true
+    description: >
+      Exactly two behaviors: the macOS binding first, then the Windows binding.
