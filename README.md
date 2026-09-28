@@ -45,8 +45,14 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   gesture rather than a wheel event. The processor therefore accumulates the axis and emits real `Cmd+[` / `Cmd+]`
   keystrokes, which also work in VS Code and anywhere else those are bound. It sits before `zip_scroll_scaler` so
   it sees raw counts instead of the 1/100-damped value, and fires at most once per gesture -- the rest of the
-  stroke is swallowed so a long swipe navigates one page instead of several. Swap the two `bindings` if the
-  directions come out reversed; raise/lower `threshold` to tune how deliberate the swipe must be.
+  stroke is swallowed so a long swipe navigates one page instead of several. Raise/lower `threshold` to tune how
+  deliberate the swipe must be.
+
+  Note the `bindings` are listed forward-then-back rather than the back-then-forward order the binding's
+  `(negative, positive)` contract implies. The pad's horizontal axis reports the opposite sign to the physical
+  swipe direction, because `switch-xy` remaps the axes in hardware, so negative travel is a swipe *right*. The
+  three-finger `EAST`/`WEST` bindings are crossed for the same reason. Cursor movement is unaffected and already
+  tracks correctly, which is why this is corrected per-binding rather than with the driver's `invert-x`.
 - **Three-finger swipe arbitration**: a second local processor, `zmk,input-processor-swipe-arbiter`
   ([src/input_processor_swipe_arbiter.c](src/input_processor_swipe_arbiter.c), configured on the `swipe_arbiter`
   node). The Azoteq driver commits to a swipe direction from the *first* nonzero delta of a gesture and reports
