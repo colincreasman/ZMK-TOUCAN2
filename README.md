@@ -15,11 +15,37 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   ESC combos). This 36-key Toucan2 omits the shield matrix's six outer-column switch positions, so those positions
   remain `&none`. Holding both far outer thumbs activates dedicated maintenance layer 3 without conflicting with
   the center Shift + L1 thumb chord: Bluetooth profiles stay in
-  their previous left-hand positions, Bluetooth clear moves one key inward to `W`, and 2-second bootloader holds
-  live on the real top pinkies (`Q` for the left half and `P` for the right). `layer_four` remains the mouse-click
+  their previous left-hand positions, Bluetooth clear moves one key inward to `W`, 2-second bootloader holds
+  live on the real top pinkies (`Q` for the left half and `P` for the right), and the right-hand home row carries
+  the macOS/Windows selector (`J`/`K`). `layer_four` remains the mouse-click
   layer because `is_touching_processor` in `toucan.dtsi` hardcodes `&mo 4` while the trackpad is touched.
 - **General configs**: [boards/shields/toucan/toucan_left.conf](boards/shields/toucan/toucan_left.conf) and [boards/shields/toucan/toucan_right.conf](boards/shields/toucan/toucan_right.conf)
-- **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) maps standalone 3-finger swipes. Up sends `Option+\`` -- this Mac remaps Mission Control to `Opt+\`` under System Settings > Keyboard > Keyboard Shortcuts > Mission Control, so the `Ctrl+Up` default does nothing here. Left/right cycle macOS windows: right sends `Cmd+\`` (next window) and left sends `Cmd+Shift+\`` (previous window), matching the thumb-button mapping on the Logi mouse. These replaced [AltTab](https://alt-tab-macos.netlify.app/)'s `Opt+Tab` / `Opt+Shift+Tab`, which cannot work from a swipe: AltTab only interprets `Shift+Tab` while its switcher is already held open, so a standalone `Opt+Shift+Tab` just leaked the raw keystroke into the focused app. The `Cmd+\`` pair is stateless, so a single discrete press/release does the whole job. Down stays unbound since every other Mission Control shortcut is unchecked on this Mac. The driver emits horizontal and vertical events independently, so swipe reasonably straight to avoid firing two shortcuts at once; `three-finger-swipe-throttle-ms` (40ms) plus the swipe arbiter below keep one motion from repeating.
+- **Host-OS mode**: the trackpad gestures send different shortcuts on macOS and Windows. Which set is used is a
+  **runtime** setting, not a build option, because this keyboard moves between machines over its Bluetooth
+  profiles and reflashing to switch host would be impractical. On layer 3 the right-hand home row mirrors the
+  Bluetooth profile keys opposite it: **`J` selects macOS, `K` selects Windows**. The choice is persisted, so the
+  board comes back up in whichever mode it was last left in.
+
+  Implemented by `zmk,behavior-os-select` ([src/behavior_os_select.c](src/behavior_os_select.c)), which wraps two
+  bindings and picks between them when the gesture fires, and `zmk,behavior-os-mode`
+  ([src/behavior_os_mode.c](src/behavior_os_mode.c)), which sets the mode (`0` = macOS, `1` = Windows, `2` =
+  toggle). The per-OS keycodes live on the `os_*` behaviors at the top of `toucan.dtsi`. The mode is resolved at
+  press and remembered for the matching release, so switching mid-press cannot strand a modifier. To change which
+  mode a freshly-reset board powers up in, set `CONFIG_TOUCAN_OS_MODE_DEFAULT_WIN=y` in the shield `.conf` files.
+
+  | Gesture | macOS | Windows |
+  |---|---|---|
+  | 3-finger up | `Opt+\`` (Mission Control) | `Win+Tab` (Task View) |
+  | 3-finger left | `Cmd+Shift+\`` (previous window) | `Alt+Shift+Tab` |
+  | 3-finger right | `Cmd+\`` (next window) | `Alt+Tab` |
+  | 2-finger left | `Cmd+[` (back) | `Alt+Left` |
+  | 2-finger right | `Cmd+]` (forward) | `Alt+Right` |
+
+  One Windows caveat: `Alt+Tab` is a *stateful* switcher, like the AltTab app the macOS bindings originally used.
+  A discrete swipe right steps one window forward, which is what is wanted, but a lone swipe left sends
+  `Alt+Shift+Tab` with no switcher open, so Windows steps backwards through most-recent-window order rather than
+  reversing an open switcher. Swiping right then left in quick succession behaves as expected.
+- **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) maps standalone 3-finger swipes to the `os_*` behaviors above. On macOS, up sends `Option+\`` -- this Mac remaps Mission Control to `Opt+\`` under System Settings > Keyboard > Keyboard Shortcuts > Mission Control, so the `Ctrl+Up` default does nothing here. Left/right cycle windows with `Cmd+\`` / `Cmd+Shift+\``, matching the thumb-button mapping on the Logi mouse. These replaced [AltTab](https://alt-tab-macos.netlify.app/)'s `Opt+Tab` / `Opt+Shift+Tab`, which cannot work from a swipe: AltTab only interprets `Shift+Tab` while its switcher is already held open, so a standalone `Opt+Shift+Tab` just leaked the raw keystroke into the focused app. The `Cmd+\`` pair is stateless, so a single discrete press/release does the whole job. Down stays unbound since every other Mission Control shortcut is unchecked on this Mac. The driver emits horizontal and vertical events independently, so swipe reasonably straight to avoid firing two shortcuts at once; `three-finger-swipe-throttle-ms` (40ms) plus the swipe arbiter below keep one motion from repeating.
 
 > **Gesture tuning is dialled in -- do not change these values casually.**
 > Hardware testing confirmed the 2- and 3-finger gestures now trigger reliably and never cross-fire: 3-finger up
@@ -37,13 +63,14 @@ leaves the trackpad completely dead since the wrong driver is loaded).
 > In particular, raising the driver throttle back toward its old `1200` *without* also removing `&swipe_arbiter`
 > will make horizontal swipes hard to trigger again -- that exact combination was the original bug.
 
-- **Page navigation**: the 3-finger left/right swipe used to send `Cmd+[` / `Cmd+]`, but that slot now belongs to
-  AltTab. Back/forward moved to a **two-finger** horizontal swipe via the `hscroll_shortcut` node
-  ([src/input_processor_scroll_shortcut.c](src/input_processor_scroll_shortcut.c)). The driver only reports swipe
+- **Page navigation**: back/forward lives on a **two-finger** horizontal swipe via the `hscroll_shortcut` node
+  ([src/input_processor_scroll_shortcut.c](src/input_processor_scroll_shortcut.c)); the three-finger left/right
+  slot it used to share now belongs to window cycling. The driver only reports swipe
   buttons for three-finger movement, so a two-finger swipe arrives as plain scroll on `INPUT_REL_HWHEEL`; simply
   forwarding that as a horizontal wheel does *not* trigger macOS page navigation, since that is a native trackpad
-  gesture rather than a wheel event. The processor therefore accumulates the axis and emits real `Cmd+[` / `Cmd+]`
-  keystrokes, which also work in VS Code and anywhere else those are bound. It sits before `zip_scroll_scaler` so
+  gesture rather than a wheel event. The processor therefore accumulates the axis and emits real keystrokes
+  (`Cmd+[` / `Cmd+]` on macOS, `Alt+Left` / `Alt+Right` on Windows), which also work in VS Code and anywhere else
+  those are bound. It sits before `zip_scroll_scaler` so
   it sees raw counts instead of the 1/100-damped value, and fires at most once per gesture -- the rest of the
   stroke is swallowed so a long swipe navigates one page instead of several. Raise/lower `threshold` to tune how
   deliberate the swipe must be.
