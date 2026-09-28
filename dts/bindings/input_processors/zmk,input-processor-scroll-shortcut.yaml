@@ -2,17 +2,20 @@
 # SPDX-License-Identifier: MIT
 
 description: |
-  Turns a relative scroll axis into a single key-combo actuation per gesture.
+  Turns a two-finger swipe into a single key-combo actuation per gesture.
 
   The Azoteq driver only reports swipe buttons for three-finger movement; a
-  two-finger swipe arrives as ordinary scroll on INPUT_REL_HWHEEL. This
-  processor accumulates that axis and, once `threshold` counts of travel have
-  built up in one direction, invokes one of two bindings exactly once. It then
-  stays quiet until the fingers leave the pad, so a long swipe navigates one
-  page rather than several.
+  two-finger swipe arrives as ordinary scroll. This processor accumulates the
+  scroll axes and, once `threshold` counts of travel have built up in one
+  direction, invokes one of two bindings exactly once. It then stays quiet until
+  the fingers leave the pad, so a long swipe navigates one page rather than
+  several.
 
-  The triggering scroll delta is consumed, so a gesture that fires a shortcut
-  does not also scroll the page sideways.
+  Because the trackpad is mounted at an angle, the accumulated vector is rotated
+  by `angle` before the direction is judged, so the gesture lines up with the
+  way the hand actually moved rather than with the sensor's axes. The driver
+  reports only the dominant axis per sample, so both axes are accumulated across
+  the whole gesture to reconstruct the direction.
 
 compatible: "zmk,input-processor-scroll-shortcut"
 
@@ -22,15 +25,37 @@ properties:
   event-code:
     type: int
     default: 6 # INPUT_REL_HWHEEL
-    description: Relative axis to watch.
+    description: Relative axis treated as horizontal.
+
+  y-event-code:
+    type: int
+    default: 8 # INPUT_REL_WHEEL
+    description: >
+      Relative axis treated as vertical. Only used to judge direction; vertical
+      events are passed through untouched so normal scrolling still works.
+
+  y-invert:
+    type: boolean
+    description: >
+      Negate the vertical axis before rotating. Set this when the driver has
+      `invert-scroll-y`, so the rotation sees the same orientation as the
+      pointer axes.
+
+  angle:
+    type: int
+    default: 0
+    description: >
+      Rotation in whole degrees, applied to the accumulated vector before the
+      direction is judged. Should match the pointer rotation. 0 disables the
+      rotation and judges purely on the horizontal axis.
 
   threshold:
     type: int
     default: 120
     description: >
-      Counts of accumulated travel in one direction before the matching binding
-      fires. Raise it if the gesture triggers too easily, lower it if a normal
-      swipe is not enough.
+      Counts of accumulated travel along the rotated horizontal axis before the
+      matching binding fires. Raise it if the gesture triggers too easily, lower
+      it if a normal swipe is not enough.
 
   reset-ms:
     type: int
@@ -43,6 +68,5 @@ properties:
     type: phandle-array
     required: true
     description: >
-      Exactly two behaviors. The first fires on negative travel (swipe left),
-      the second on positive travel (swipe right). Swap them if the directions
-      come out reversed on your hardware.
+      Exactly two behaviors. The first fires on negative rotated travel, the
+      second on positive.

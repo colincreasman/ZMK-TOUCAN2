@@ -48,11 +48,18 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   stroke is swallowed so a long swipe navigates one page instead of several. Raise/lower `threshold` to tune how
   deliberate the swipe must be.
 
-  Note the `bindings` are listed forward-then-back rather than the back-then-forward order the binding's
-  `(negative, positive)` contract implies. The pad's horizontal axis reports the opposite sign to the physical
-  swipe direction, because `switch-xy` remaps the axes in hardware, so negative travel is a swipe *right*. The
-  three-finger `EAST`/`WEST` bindings are crossed for the same reason. Cursor movement is unaffected and already
-  tracks correctly, which is why this is corrected per-binding rather than with the driver's `invert-x`.
+  `angle` matches the pointer rotation, and exists for the same reason: the pad is mounted at an angle, so a
+  swipe that is horizontal *to the hand* is a diagonal *to the sensor*. Without it you have to swipe along the
+  pad's physical axis while the cursor uses the hand's axis. The driver reports only the dominant axis per
+  sample, so both axes are accumulated across the gesture and the total is rotated before the direction is
+  judged. `y-invert` undoes the driver's `invert-scroll-y` so the rotation sees the same orientation as the
+  pointer axes. Vertical events pass through untouched, and firing requires the rotated horizontal component to
+  beat the vertical one, so ordinary scrolling can never trip it.
+
+  **Three-finger swipes cannot be corrected this way.** The driver resolves those into discrete
+  `INPUT_BTN_NORTH/EAST/SOUTH/WEST` events internally, using the raw sensor axes, so the direction is already
+  collapsed before any input processor sees it -- the magnitudes needed to rotate are gone. `swipe_arbiter`
+  compensates as far as is possible by picking the dominant axis over several samples.
 - **Three-finger swipe arbitration**: a second local processor, `zmk,input-processor-swipe-arbiter`
   ([src/input_processor_swipe_arbiter.c](src/input_processor_swipe_arbiter.c), configured on the `swipe_arbiter`
   node). The Azoteq driver commits to a swipe direction from the *first* nonzero delta of a gesture and reports
