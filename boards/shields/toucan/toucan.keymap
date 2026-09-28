@@ -207,10 +207,15 @@
         // physical positions where possible. The bootloader holds move to Q/P,
         // the real top pinky keys on the 36-key variant; hold the corresponding
         // side for two seconds to enter that half's UF2 bootloader.
+        //
+        // The two home-row keys mirror the Bluetooth profiles opposite them and
+        // pick which host OS the trackpad gestures target: `J` selects macOS,
+        // `K` selects Windows. The choice persists across reboots, so it only
+        // needs setting when moving the keyboard to a different machine.
         layer_three {
             bindings = <
                 &none &bhold &bt BT_CLR &none &none &none   &none &none &none &none &bhold &none
-                &none &bt BT_SEL 0 &bt BT_SEL 1 &bt BT_SEL 2 &bt BT_SEL 3 &none   &none &none &none &none &none &none
+                &none &bt BT_SEL 0 &bt BT_SEL 1 &bt BT_SEL 2 &bt BT_SEL 3 &none   &none &os_mode 0 &os_mode 1 &none &none &none
                 &none &none &none &none &none &none   &none &none &none &none &none &none
                       &none &none &trans              &trans &none &none
             >;

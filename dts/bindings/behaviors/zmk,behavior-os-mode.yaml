@@ -1,0 +1,14 @@
+# Copyright (c) 2026 Colin Creasman
+# SPDX-License-Identifier: MIT
+
+description: |
+  Sets the host-OS mode used by `zmk,behavior-os-select`.
+
+  The chosen mode is persisted, so the keyboard comes back up in whichever mode
+  it was last left in.
+
+  Takes one parameter: 0 selects macOS, 1 selects Windows, 2 toggles.
+
+compatible: "zmk,behavior-os-mode"
+
+include: one_param.yaml
