@@ -19,11 +19,31 @@
 #
 ---
 include:
+  # ---- Standalone mode: the left half is the central ------------------------
   - board: seeeduino_xiao_ble
     shield: toucan_left rgbled_adapter nice_view_gem
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y
+  # The right half is a peripheral in BOTH modes, so this one build serves
+  # standalone and dongle mode alike.
   - board: seeeduino_xiao_ble
     shield: toucan_right rgbled_adapter
   - board: seeeduino_xiao_ble
     shield: settings_reset
+
+  # ---- Dongle mode: the PandaKB USB dongle is the central -------------------
+  # See "Dongle mode" in the README for the one-time flashing procedure.
+  - board: nice_nano_v2
+    shield: toucan_dongle pandakb_dongle dongle_display
+    snippet: studio-rpc-usb-uart
+    cmake-args: -DCONFIG_ZMK_STUDIO=y
+    artifact-name: toucan_dongle
+  # toucan_left_peripheral turns the left half into a plain peripheral.
+  - board: seeeduino_xiao_ble
+    shield: toucan_left toucan_left_peripheral rgbled_adapter nice_view_gem
+    artifact-name: toucan_left_dongle_mode
+  # The dongle is a nice!nano, a different board from the halves' XIAO, so it
+  # needs its own settings reset image.
+  - board: nice_nano_v2
+    shield: settings_reset
+    artifact-name: settings_reset_dongle

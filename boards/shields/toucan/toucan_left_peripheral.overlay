@@ -1,0 +1,23 @@
+/*
+ * Dongle-mode modifier for the left half. List it straight after toucan_left:
+ *
+ *     shield: toucan_left toucan_left_peripheral rgbled_adapter nice_view_gem
+ *
+ * Its presence also flips the left half's split role from central to
+ * peripheral (see Kconfig.defconfig), so no extra cmake arguments are needed.
+ *
+ * Standalone, the left half is the central: toucan_left.overlay enables the
+ * trackpad listener, and trackpad_split stays enabled as the proxy that
+ * receives the right half's trackpad events. As a dongle peripheral it must do
+ * neither. The dongle receives and processes those events instead, and ZMK
+ * BUILD_ASSERTs that every enabled zmk,input-split on a peripheral names a
+ * `device` to forward, which the left half does not have.
+ */
+
+&trackpad_listener {
+    status = "disabled";
+};
+
+&trackpad_split {
+    status = "disabled";
+};

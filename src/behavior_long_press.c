@@ -11,6 +11,7 @@
 
 #include <drivers/behavior.h>
 #include <zmk/behavior.h>
+#include <zmk/events/position_state_changed.h>
 #include <zmk/keymap.h>
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
@@ -19,6 +20,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 struct behavior_long_press_config {
     uint32_t duration_ms;
+    bool central;
     struct zmk_behavior_binding behavior;
 };
 
@@ -51,6 +53,16 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
 
     data->event = event;
     data->active = true;
+
+#if IS_ENABLED(CONFIG_ZMK_SPLIT)
+    // Behaviors like &bootloader run on the part named by the event's source,
+    // which is normally the half the key physically lives on. `central`
+    // retargets them at the central itself -- the dongle, which has no keys of
+    // its own to trigger anything from.
+    if (config->central) {
+        data->event.source = ZMK_POSITION_STATE_CHANGE_SOURCE_LOCAL;
+    }
+#endif
 
     int32_t duration_left = (event.timestamp + config->duration_ms) - k_uptime_get();
     k_work_reschedule(&data->work, K_MSEC(MAX(duration_left, 0)));
@@ -88,6 +100,7 @@ static const struct behavior_driver_api behavior_long_press_driver_api = {
     static struct behavior_long_press_data behavior_long_press_data_##n;                           \
     static const struct behavior_long_press_config behavior_long_press_config_##n = {              \
         .duration_ms = DT_INST_PROP(n, duration_ms),                                                \
+        .central = DT_INST_PROP(n, central),                                                       \
         .behavior = ZMK_KEYMAP_EXTRACT_BINDING(0, DT_DRV_INST(n)),                                 \
     };                                                                                             \
     BEHAVIOR_DT_INST_DEFINE(n, behavior_long_press_init, NULL, &behavior_long_press_data_##n,       \

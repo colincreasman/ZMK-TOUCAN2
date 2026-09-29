@@ -13,3 +13,11 @@ properties:
     type: int
     required: true
     description: Time the key must remain pressed before invoking the behavior.
+
+  central:
+    type: boolean
+    description: >
+      Invoke the behavior on the split central instead of on the part whose
+      key was pressed. Needed for source-local behaviors like &bootloader to
+      target a keyless dongle; without it they run on the half that owns the
+      key.
