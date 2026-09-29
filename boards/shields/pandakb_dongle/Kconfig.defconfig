@@ -1,0 +1,20 @@
+if SHIELD_PANDAKB_DONGLE
+
+if ZMK_DISPLAY
+
+config I2C
+    default y
+
+# Zephyr drives the SH1106 through its SSD1306 driver.
+config SSD1306
+    default y
+
+endif # ZMK_DISPLAY
+
+# The OLED is fed from the nice!nano's switched VCC rail (P0.13), which is only
+# driven when ZMK's external power control is built in. Matches PandaKB's own
+# dongle firmware.
+config ZMK_EXT_POWER
+    default y
+
+endif # SHIELD_PANDAKB_DONGLE

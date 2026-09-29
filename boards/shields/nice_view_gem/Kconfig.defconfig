@@ -39,7 +39,10 @@ config NICE_VIEW_WIDGET_STATUS
     select LV_USE_CANVAS
     select LV_USE_ANIMIMG
     select LV_USE_ANIMATION
-    select ZMK_WPM
+    # Central only: ZMK builds wpm.c for every role, but the keycode event it
+    # subscribes to is only compiled for the central, so selecting WPM on a
+    # split peripheral fails to link. Only the central screen shows WPM anyway.
+    select ZMK_WPM if !ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL
 
 config NICE_VIEW_WIDGET_INVERTED
     bool "Invert display colors"

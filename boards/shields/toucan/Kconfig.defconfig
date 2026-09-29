@@ -3,8 +3,37 @@ if SHIELD_TOUCAN_LEFT
 config ZMK_KEYBOARD_NAME
     default "Toucan"
 
+# The left half is the central in standalone mode. Listing the
+# toucan_left_peripheral modifier shield alongside it turns it into a plain
+# peripheral for dongle mode instead. ZMK's own definition of this symbol has
+# no default, so withholding this one is all that takes.
+config ZMK_SPLIT_ROLE_CENTRAL
+    default y if !SHIELD_TOUCAN_LEFT_PERIPHERAL
+
+endif
+
+
+
+if SHIELD_TOUCAN_DONGLE
+
+config ZMK_KEYBOARD_NAME
+    default "Toucan Dongle"
+
 config ZMK_SPLIT_ROLE_CENTRAL
     default y
+
+# Both keyboard halves are peripherals of the dongle.
+config ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS
+    default 2
+
+endif
+
+
+
+# Whichever part is central (the left half standalone, the dongle otherwise)
+# fetches and re-exposes the other parts' battery levels. ZMK only defines these
+# for the central role, so on a peripheral these defaults are simply inert.
+if SHIELD_TOUCAN_LEFT || SHIELD_TOUCAN_DONGLE
 
 config ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING
     default y
@@ -16,15 +45,21 @@ endif
 
 
 
-if SHIELD_TOUCAN_LEFT || SHIELD_TOUCAN_RIGHT
-
-config SPI
-    default y
+if SHIELD_TOUCAN_LEFT || SHIELD_TOUCAN_RIGHT || SHIELD_TOUCAN_DONGLE
 
 config ZMK_SPLIT
     default y
 
 config ZMK_POINTING
+    default y
+
+endif
+
+
+
+if SHIELD_TOUCAN_LEFT || SHIELD_TOUCAN_RIGHT
+
+config SPI
     default y
 
 config RGBLED_WIDGET_BATTERY_LEVEL_HIGH

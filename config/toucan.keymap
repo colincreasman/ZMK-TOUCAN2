@@ -130,6 +130,19 @@
             duration-ms = <2000>;
             bindings = <&bootloader>;
         };
+
+        // Same 2s hold, retargeted at the split central via `central`. In
+        // dongle mode that is the keyless dongle, which otherwise has no way
+        // into its UF2 bootloader short of opening its case to reach the reset
+        // button. Standalone, the central is the left half, so this simply
+        // duplicates the left pinky hold.
+        bhold_dongle: bootloader_hold_dongle {
+            compatible = "zmk,behavior-long-press";
+            #binding-cells = <0>;
+            duration-ms = <2000>;
+            bindings = <&bootloader>;
+            central;
+        };
     };
 
     combos {
@@ -157,6 +170,7 @@
         compatible = "zmk,keymap";
 
         layer_zero {
+            display-name = "ABC";
             bindings = <
         //     ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮   ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮
                 &none       &kp Q       &kp W       &kp E       &kp R       &kp T           &kp Y       &kp U       &kp I       &kp O       &kp P       &none
@@ -172,6 +186,7 @@
 
 
         layer_one {
+            display-name = "NUM";
             bindings = <
         //     ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮   ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮
                 &none       &kp ESC     &kp N1      &kp N2      &kp N3      &trans          &trans      &trans      &kp UP      &kp MINUS   &kp EQUAL   &none
@@ -188,6 +203,7 @@
 
 
         layer_two {
+            display-name = "MED";
             bindings = <
         //     ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮   ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮
                 &none       &trans      &trans      &trans      &trans      &trans          &kp C_PREV  &kp C_PP    &kp C_NEXT  &kp C_VOL_DN   &kp C_VOL_UP   &none
@@ -212,9 +228,14 @@
         // pick which host OS the trackpad gestures target: `J` selects macOS,
         // `K` selects Windows. The choice persists across reboots, so it only
         // needs setting when moving the keyboard to a different machine.
+        //
+        // `T` is a third 2s bootloader hold, for the USB dongle in dongle mode
+        // (the left half when standalone). It sits on the inner column, between
+        // the two halves' pinky holds, like the dongle sits between the halves.
         layer_three {
+            display-name = "SYS";
             bindings = <
-                &none &bhold &bt BT_CLR &none &none &none   &none &none &none &none &bhold &none
+                &none &bhold &bt BT_CLR &none &none &bhold_dongle   &none &none &none &none &bhold &none
                 &none &bt BT_SEL 0 &bt BT_SEL 1 &bt BT_SEL 2 &bt BT_SEL 3 &none   &none &os_mode 0 &os_mode 1 &none &none &none
                 &none &none &none &none &none &none   &none &none &none &none &none &none
                       &none &none &trans              &trans &none &none
@@ -226,6 +247,7 @@
         // thumb cluster can left/middle/right-click without needing a
         // dedicated held key. Mirrors the stock Toucan2 keymap's mouse layer.
         layer_four {
+            display-name = "PTR";
             bindings = <
                 &trans &trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans &trans
                 &trans &trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans &trans

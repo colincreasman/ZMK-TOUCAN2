@@ -8,6 +8,8 @@ manifest:
       url-base: https://github.com/geeksville
     - name: beekeeb
       url-base: https://github.com/beekeeb
+    - name: englmaxi
+      url-base: https://github.com/englmaxi
   projects:
     - name: zmk
       remote: zmkfirmware
@@ -22,5 +24,10 @@ manifest:
     - name: zmk-input-zoom
       remote: beekeeb
       revision: main
+    # Status screen for the dongle's OLED. Pinned to the ZMK v0.3 line, the
+    # same revision PandaKB's own dongle firmware uses.
+    - name: zmk-dongle-display
+      remote: englmaxi
+      revision: v0.3
   self:
     path: config

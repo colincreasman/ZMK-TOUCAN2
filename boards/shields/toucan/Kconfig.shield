@@ -3,3 +3,13 @@ config SHIELD_TOUCAN_LEFT
 
 config SHIELD_TOUCAN_RIGHT
     def_bool $(shields_list_contains,toucan_right)
+
+# Keyless central that owns the keymap when the keyboard runs through a USB
+# dongle. See toucan_dongle.overlay.
+config SHIELD_TOUCAN_DONGLE
+    def_bool $(shields_list_contains,toucan_dongle)
+
+# Modifier shield that turns the left half into a plain peripheral for dongle
+# mode. Only ever listed alongside toucan_left. See toucan_left_peripheral.overlay.
+config SHIELD_TOUCAN_LEFT_PERIPHERAL
+    def_bool $(shields_list_contains,toucan_left_peripheral)

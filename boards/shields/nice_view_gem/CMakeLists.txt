@@ -30,5 +30,10 @@ if(CONFIG_ZMK_DISPLAY AND CONFIG_NICE_VIEW_WIDGET_STATUS)
     endif()
     zephyr_library_sources(widgets/screen.c)
     zephyr_library_sources(widgets/sleep.c)
+  else()
+    # Split peripheral, e.g. the left half when a USB dongle is the central.
+    # Layer/profile/output state only exists on the central, so this draws the
+    # peripheral's own battery and its link to the dongle instead.
+    zephyr_library_sources(widgets/screen_peripheral.c)
   endif()
 endif()

@@ -1,0 +1,36 @@
+/*
+ * Toucan dongle: a keyless central that owns the keymap, combos, gesture
+ * processing and host connection, with both halves as its peripherals.
+ *
+ * Board-agnostic by design. It works on any BLE-capable ZMK board; the PandaKB
+ * dongle's OLED wiring lives separately in the pandakb_dongle shield.
+ *
+ * All parts of a split must share the exact same matrix transform and physical
+ * layout, so this pulls them in from toucan.dtsi rather than copying them.
+ */
+
+#include "toucan.dtsi"
+
+/ {
+    chosen {
+        zmk,kscan = &mock_kscan;
+    };
+
+    mock_kscan: mock_kscan {
+        compatible = "zmk,kscan-mock";
+        columns = <0>;
+        rows = <0>;
+        events = <0>;
+    };
+};
+
+// toucan.dtsi declares the halves' GPIO key matrix, whose column pins are only
+// filled in by each half's own overlay. The dongle has no keys, so the matrix
+// is dropped rather than left behind incomplete.
+/delete-node/ &kscan0;
+
+// The right half's trackpad events arrive through trackpad_split and are
+// processed here, exactly as they are on the left half in standalone mode.
+&trackpad_listener {
+    status = "okay";
+};
