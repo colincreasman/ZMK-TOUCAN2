@@ -2,15 +2,15 @@ if(CONFIG_ZMK_DISPLAY AND CONFIG_NICE_VIEW_WIDGET_STATUS)
   zephyr_library_include_directories(${CMAKE_SOURCE_DIR}/include)
   zephyr_library_sources(custom_status_screen.c)
   zephyr_library_sources(assets/images.c)
+  # The output (USB/BLE) widget reads central-only state, so it is only built in
+  # the central section below.
   if(CONFIG_TOUCAN_STATUS_SCREEN EQUAL 2)
     zephyr_library_sources(widgets/battery_arc.c)
     zephyr_library_sources(widgets/battery_arc_peripheral.c)
-    zephyr_library_sources(widgets/output_arc.c)
     zephyr_library_sources(widgets/chart.c)
   else()
     zephyr_library_sources(widgets/battery.c)
     zephyr_library_sources(widgets/battery_peripheral.c)
-    zephyr_library_sources(widgets/output.c)
   endif()
   zephyr_library_sources(widgets/util.c)
   

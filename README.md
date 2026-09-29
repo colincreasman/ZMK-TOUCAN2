@@ -230,9 +230,10 @@ firmware is unchanged; it re-pairs with the left half as its central.
   just adding `-DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n` does not work for this keyboard**, because on a peripheral ZMK
   `BUILD_ASSERT`s that every enabled `zmk,input-split` names a `device`, and the left half's proxy has none.
 - `nice_view_gem/widgets/screen_peripheral.c`: this keyboard's customized nice!view screen only ever had a central
-  view, so a peripheral build of it could not link. The gem also selected `ZMK_WPM` unconditionally, and ZMK
-  builds `wpm.c` for every role while the keycode event it needs is central-only, which was a second link
-  failure. `ZMK_WPM` is now only selected for the central.
+  view, so a peripheral build of it could not link. Two more latent peripheral-only bugs came with it: the gem
+  selected `ZMK_WPM` unconditionally, but ZMK builds `wpm.c` for every role while the keycode event it needs is
+  central-only (now selected for the central only); and the output widget, which reads central-only state, was
+  compiled for every role (now central only). Standalone builds are unaffected by all three changes.
 - Central-only battery options are defaulted in `Kconfig.defconfig` keyed on the role rather than set in
   `toucan_left.conf`, so they follow whichever part is central.
 
