@@ -106,8 +106,14 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   ([src/input_processor_rotate.c](src/input_processor_rotate.c)) rotates the reported X/Y pair to cancel that
   mount angle out, making the pad behave like the Column Angle version.
   - Sign convention: **positive is counter-clockwise on screen**. The correction matches the pad's own
-    counter-clockwise mount, so the default is `angle = <40>`. Flip the sign if the cursor tracks the wrong
-    diagonal; change the magnitude if the correction is too strong or too weak.
+    counter-clockwise mount, so the angle is positive. Seen top-down, rotating the reported vector
+    counter-clockwise is the same as turning the pad's *virtual* axes clockwise, which is how it is easiest to
+    describe when tuning. Flip the sign if the cursor tracks the wrong diagonal; change the magnitude if the
+    correction is too strong or too weak.
+  - Tuned on hardware: `35` was the right direction but too little, `40` was confirmed good (tagged
+    `trackpad-dialed-in`), and the current `44` turns the virtual axes a further ~10% clockwise.
+    `hscroll_shortcut` carries the same `angle` so two-finger swipes are judged in the same frame as the cursor;
+    **always change the two together**.
   - It runs first in the chain so the activation gate and acceleration curve both operate in the hand's frame.
   - Rotation needs both axes at once, but they arrive as two separate events. The driver always reports X
     immediately followed by Y for the same sample, so the processor buffers X, does the maths when Y arrives,
