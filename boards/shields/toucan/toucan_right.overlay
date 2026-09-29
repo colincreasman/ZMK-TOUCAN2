@@ -82,7 +82,22 @@
         scroll-sensitivity = <100>;
 
         filter-settings=<0x0B>;
-        hold-time = <500>;
+
+        // Press-and-hold-to-drag ("click and hold"). The driver's press-and-hold
+        // gesture holds the left button down once a finger has been held (within
+        // tap-distance) for longer than hold-time, then drags with movement and
+        // releases on lift -- see the TPS43_PRESS_AND_HOLD handling in the tps43
+        // driver. Dropped 500 -> 300ms so the drag engages promptly after a
+        // sharp touch instead of feeling like a long press. Still comfortably
+        // above the (unset, hardware-default ~150ms) tap-time, so a quick tap is
+        // still a plain click and only a deliberate hold starts a drag. Lower
+        // for a snappier hold; raise if resting a finger starts unwanted drags.
+        //
+        // Note this is press-and-hold, NOT macOS's "tap to drag" tap-and-a-half
+        // (tap, lift, re-touch): that lift-and-retouch chaining is a software
+        // behavior macOS adds on top of the trackpad, not an Azoteq hardware
+        // gesture, so it is not replicated here. The drag outcome is the same.
+        hold-time = <300>;
 
         // zoom; // Disabled: pinch-to-zoom (Cmd+/Cmd-) kept firing accidentally
         // during normal two-finger scrolling/movement. Not present -> the

@@ -149,9 +149,14 @@ leaves the trackpad completely dead since the wrong driver is loaded).
 
   Tuning: raise `min-factor` if slow movement feels too heavy, raise `max-factor` or lower `speed-max` for a more
   aggressive ramp, and raise `activation-distance` if stray cursor movement still sneaks through while typing. Tap-to-click (`single-tap`) and two-finger-tap-to-right-click (`two-finger-tap`) already match System
-  Settings 1:1. There's no firmware equivalent for Force Click/haptic feedback or click-pressure firmness --
-  this is a flat capacitive trackpad with no physical click mechanism or haptic actuator, so those macOS settings
-  have no analog here.
+  Settings 1:1. Press-and-hold-to-drag (`press-and-hold`, "click and hold") is also enabled: hold a finger down
+  past `hold-time` (300ms) and the left button is held down, so movement drags and lifting releases -- adjust
+  `hold-time` in [toucan_right.overlay](boards/shields/toucan/toucan_right.overlay) for a snappier or safer hold.
+  This is the Azoteq's equivalent of dragging; macOS's "tap to drag" tap-and-a-half (tap, lift, re-touch) is a
+  software behavior macOS layers on the trackpad rather than a hardware gesture, so it has no direct analog, but
+  the drag outcome is the same. There's likewise no firmware equivalent for Force Click/haptic feedback or
+  click-pressure firmness -- this is a flat capacitive trackpad with no physical click mechanism or haptic
+  actuator, so those macOS settings have no analog here.
 
 # Dongle mode (PandaKB USB dongle)
 
