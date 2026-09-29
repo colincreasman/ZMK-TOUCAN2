@@ -16,7 +16,8 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   remain `&none`. Holding both far outer thumbs activates dedicated maintenance layer 3 without conflicting with
   the center Shift + L1 thumb chord: Bluetooth profiles stay in
   their previous left-hand positions, Bluetooth clear moves one key inward to `W`, 2-second bootloader holds
-  live on the real top pinkies (`Q` for the left half and `P` for the right), and the right-hand home row carries
+  live on the real top pinkies (`Q` for the left half and `P` for the right) with a third on `T` for the USB
+  dongle, and the right-hand home row carries
   the macOS/Windows selector (`J`/`K`). `layer_four` remains the mouse-click
   layer because `is_touching_processor` in `toucan.dtsi` hardcodes `&mo 4` while the trackpad is touched.
 - **General configs**: [boards/shields/toucan/toucan_left.conf](boards/shields/toucan/toucan_left.conf) and [boards/shields/toucan/toucan_right.conf](boards/shields/toucan/toucan_right.conf)
@@ -151,6 +152,89 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   Settings 1:1. There's no firmware equivalent for Force Click/haptic feedback or click-pressure firmness --
   this is a flat capacitive trackpad with no physical click mechanism or haptic actuator, so those macOS settings
   have no analog here.
+
+# Dongle mode (PandaKB USB dongle)
+
+The keyboard can run through [PandaKB's ZMK dongle](https://pandakb.com/shop/keyboard-kit/pandakb-zmk-split-keyboard-dongle/)
+(an nRF52840 nice!nano v2 with a 1.3" SH1106 OLED). The dongle becomes the split **central** and both halves
+become its **peripherals**, so it behaves like any mouse/keyboard receiver: plug it into a computer's USB port
+and the keyboard is simply there as a USB keyboard and mouse, with no Bluetooth pairing on that computer, ever.
+The halves bond to the dongle once, and that bond persists across power cycles and computers.
+
+It is a firmware mode, not a runtime switch. ZMK fixes a part's split role at build time, so **in dongle mode the
+halves cannot connect to a computer without the dongle**. Switching modes means reflashing, as described below.
+
+## What is built
+
+| Artifact | Flash to | Mode |
+|---|---|---|
+| `toucan_dongle` | dongle | dongle |
+| `toucan_left_dongle_mode` | left half | dongle |
+| `toucan_right rgbled_adapter-seeeduino_xiao_ble-zmk` | right half | **both** -- the right half is a peripheral either way |
+| `toucan_left rgbled_adapter nice_view_gem-seeeduino_xiao_ble-zmk` | left half | standalone |
+| `settings_reset_dongle` | dongle | reset (nice!nano board) |
+| `settings_reset-seeeduino_xiao_ble-zmk` | either half | reset (XIAO board) |
+
+## One-time setup
+
+Bonds from standalone mode must be cleared first: flashing new firmware does not erase stored settings, and the
+right half is still bonded to the left half as its old central.
+
+1. Turn **off** any other ZMK keyboards nearby. A central claims the first unpaired peripherals it finds.
+2. Put each device into its UF2 bootloader and flash its settings reset:
+   - Halves: double-tap the reset button, or hold both far outer thumbs (layer 3) and hold `Q` (left) / `P`
+     (right) for 2 seconds. Flash `settings_reset-seeeduino_xiao_ble-zmk.uf2`.
+   - Dongle: pop off the magnetic enclosure (its buttons are cosmetic) and double-tap the board's reset
+     button. Flash `settings_reset_dongle`.
+3. Flash the real firmware the same way: `toucan_dongle` to the dongle, `toucan_left_dongle_mode` to the left
+   half, and the usual right-half firmware to the right half.
+4. Plug the dongle into USB and power both halves on near it. They bond within a few seconds, and the left
+   half's screen changes from `SEARCHING` to `LINKED`.
+5. On any computer that previously paired the Toucan over Bluetooth, remove that old pairing; it is now stale.
+
+macOS may show the Keyboard Setup Assistant the first time the dongle is plugged in (dismiss it, or pick ANSI),
+and newer Macs may ask to allow the new USB accessory.
+
+## Day to day
+
+- **Everything lives on the dongle**: the keymap, combos, gesture processing and the macOS/Windows gesture mode
+  (layer 3 `J`/`K`), which is stored on the dongle and therefore travels with it between computers.
+- **Updating firmware**: to update the dongle later without opening it, hold both far outer thumbs and hold `T`
+  for 2 seconds. That is a third bootloader hold, retargeted at the central via the long-press behavior's
+  `central` option. In standalone mode the central is the left half, so the same hold just duplicates `Q`.
+- **The dongle has a small battery** and can also connect to hosts over Bluetooth itself, using the layer 3
+  Bluetooth profile keys. Over USB, none of that is needed.
+- **Screens**: the dongle's OLED shows the active layer, modifiers, output and battery levels
+  ([englmaxi/zmk-dongle-display](https://github.com/englmaxi/zmk-dongle-display)). Layers are named `ABC`, `NUM`,
+  `MED`, `SYS` and `PTR` so it has something to show; three characters also keeps the left half's standalone
+  layer arc the same width as its old `L#n` fallback. In dongle mode the left half's screen shows its own
+  battery and whether its link to the dongle is up.
+- **The dongle never deep-sleeps.** Deep sleep is only woken by a key press, and the dongle has no keys.
+
+## Undongling
+
+Flash `settings_reset` to both halves, then the standalone left firmware to the left half. The right half's
+firmware is unchanged; it re-pairs with the left half as its central.
+
+## How it is put together
+
+- `boards/shields/toucan/toucan_dongle.*`: the keyless central. It reuses `toucan.dtsi` for the exact same matrix
+  transform, physical layout and input pipeline, swaps in a mock kscan, and enables the trackpad listener.
+  Board-agnostic: any BLE-capable ZMK board works as the dongle.
+- `boards/shields/pandakb_dongle/`: PandaKB's OLED wiring, copied verbatim from their own dongle firmware
+  ([PandaKBLab/zmk-corne-j-dongle](https://github.com/PandaKBLab/zmk-corne-j-dongle)). Its quirky panel values
+  (`width = <129>`, `segment-offset = <1>`) are intentional. Kept separate so the dongle shield stays generic.
+- `boards/shields/toucan/toucan_left_peripheral.overlay`: a modifier shield listed after `toucan_left`. Its
+  presence flips the left half's role to peripheral through `Kconfig.defconfig`, so no cmake arguments are
+  needed. It also disables the trackpad listener and the `trackpad_split` proxy. **ZMK's usual dongle recipe of
+  just adding `-DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n` does not work for this keyboard**, because on a peripheral ZMK
+  `BUILD_ASSERT`s that every enabled `zmk,input-split` names a `device`, and the left half's proxy has none.
+- `nice_view_gem/widgets/screen_peripheral.c`: this keyboard's customized nice!view screen only ever had a central
+  view, so a peripheral build of it could not link. The gem also selected `ZMK_WPM` unconditionally, and ZMK
+  builds `wpm.c` for every role while the keycode event it needs is central-only, which was a second link
+  failure. `ZMK_WPM` is now only selected for the central.
+- Central-only battery options are defaulted in `Kconfig.defconfig` keyed on the role rather than set in
+  `toucan_left.conf`, so they follow whichever part is central.
 
 # Companion app: LinearMouse
 
