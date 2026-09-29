@@ -31,9 +31,14 @@ endif
 
 
 # Whichever part is central (the left half standalone, the dongle otherwise)
-# fetches and re-exposes the other parts' battery levels. ZMK only defines these
-# for the central role, so on a peripheral these defaults are simply inert.
-if SHIELD_TOUCAN_LEFT || SHIELD_TOUCAN_DONGLE
+# fetches and re-exposes the other parts' battery levels.
+#
+# The role guard is load-bearing. Each `config` entry below is an additional
+# definition of the symbol whose only dependencies are the enclosing `if`
+# conditions, so without it these defaults would switch the options on for the
+# left half in dongle mode too, even though ZMK defines them for the central
+# role only -- and central_bas_proxy.c then fails to compile on a peripheral.
+if (SHIELD_TOUCAN_LEFT || SHIELD_TOUCAN_DONGLE) && ZMK_SPLIT_ROLE_CENTRAL
 
 config ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING
     default y
