@@ -193,20 +193,26 @@
 
         // Compensates for the trackpad being mounted at an angle. This is
         // beekeeb's "Thumb Angle" variant, where the pad is rotated
-        // COUNTER-CLOCKWISE by about 40 degrees (its top edge rises to the
+        // COUNTER-CLOCKWISE by roughly 40 degrees (its top edge rises to the
         // right) so it faces the thumb. The alternative "Column Angle" variant
         // mounts the same pad square to the case. Fingers arrive square to the
         // keyboard either way, so on this variant a stroke that feels "straight
         // up" lands on the sensor as a diagonal.
         //
-        // Rotating the reported vector counter-clockwise by the same 40 degrees
-        // cancels the mount angle out, making the pad behave like the Column
-        // Angle version.
+        // Rotating the reported vector counter-clockwise by the mount angle
+        // cancels it out, making the pad behave like the Column Angle version.
+        // Seen top-down, that is the same as turning the pad's *virtual* axes
+        // clockwise, which is how the tuning below was described.
         //
         // Sign convention: positive is counter-clockwise on screen, and the
         // correction matches the pad's own counter-clockwise mount, so this is
         // POSITIVE. Flip the sign if the cursor tracks the wrong diagonal;
         // change the magnitude if the correction is too strong or too weak.
+        //
+        // Tuned on hardware: 35 was the right direction but too little, 40 was
+        // confirmed good (tagged `trackpad-dialed-in`), and 44 turns the virtual
+        // axes a further ~10% clockwise. hscroll_shortcut must use the same
+        // value, so two-finger swipes are judged in the same frame.
         //
         // This runs first so everything downstream (the activation gate and the
         // acceleration curve) works in the hand's frame rather than the
@@ -217,7 +223,7 @@
         pointer_rotate: pointer_rotate {
             compatible = "zmk,input-processor-rotate";
             #input-processor-cells = <0>;
-            angle = <40>;
+            angle = <44>;
             x-code = <INPUT_REL_X>;
             y-code = <INPUT_REL_Y>;
             reset-ms = <300>;
@@ -325,7 +331,7 @@
             event-code = <INPUT_REL_HWHEEL>;
             y-event-code = <INPUT_REL_WHEEL>;
             y-invert;
-            angle = <40>;
+            angle = <44>;
             threshold = <120>;
             reset-ms = <300>;
             bindings = <&os_nav_fwd>, <&os_nav_back>;
