@@ -86,6 +86,11 @@ files instead.
 |---|---|---|
 | Keymap, combos, gesture shortcuts, trackpad rotation/speed | dongle | left half |
 | Trackpad hardware (tap, hold, sensitivity) | right half | right half |
+| Left screen, LEDs, battery/sleep settings | that half | that half |
+| Upgrading ZMK itself | all three | both halves |
+
+Flashing a half still means plugging that half into USB, but you don't need its
+reset button: the layer 3 `Q`/`P` holds work in dongle mode too.
 
 ## If something's weird
 
