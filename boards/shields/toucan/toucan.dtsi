@@ -200,13 +200,13 @@
         // and rotating the reported vector cancels that out.
         //
         // Sign convention: positive rotates movement counter-clockwise on
-        // screen, negative clockwise. The sign comes from hardware testing,
-        // not from photos of the mount: +35 and +40 felt right on the
-        // standalone build (+40 is tagged `trackpad-dialed-in`), but +44 was
-        // then reported as rotated the wrong way, so it is now -44 per that
-        // feedback. The rotation maths itself did not change between those
-        // builds, so if the direction ever seems to flip again, compare
-        // against the +40 tag before changing anything else.
+        // screen, negative clockwise. Tuned on hardware: +35 was the right
+        // direction but too little, +40 was very close (tagged
+        // `trackpad-dialed-in`), and +41 adds the last ~2%. +44 overshot:
+        // over-correcting makes the leftover error point the other way, which
+        // feels like the rotation has reversed even though it has not. -44
+        // tested unusable, confirming positive is the right direction. The
+        // angle is in whole degrees; adjust a degree at a time.
         //
         // hscroll_shortcut carries the same angle so two-finger swipes are
         // judged in the same frame as the cursor. Always change the two
@@ -221,7 +221,7 @@
         pointer_rotate: pointer_rotate {
             compatible = "zmk,input-processor-rotate";
             #input-processor-cells = <0>;
-            angle = <(-44)>;
+            angle = <41>;
             x-code = <INPUT_REL_X>;
             y-code = <INPUT_REL_Y>;
             reset-ms = <300>;
@@ -329,7 +329,7 @@
             event-code = <INPUT_REL_HWHEEL>;
             y-event-code = <INPUT_REL_WHEEL>;
             y-invert;
-            angle = <(-44)>;
+            angle = <41>;
             threshold = <120>;
             reset-ms = <300>;
             bindings = <&os_nav_fwd>, <&os_nav_back>;

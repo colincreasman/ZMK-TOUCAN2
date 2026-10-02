@@ -2,6 +2,10 @@
 
 [The beekeeb Toucan2 Keyboard](https://beekeeb.com/introducing-toucan2/) is a wireless split 42-key column‑stagger keyboard that a display and a trackpad, with an aggressive stagger on the pinky columns.
 
+> **Known-good baseline:** the tag `known-good-base` is the hardware-confirmed setup to build on (dongle mode,
+> 41° trackpad rotation, tuned gestures, macOS/Windows modes, LinearMouse config). If an experiment goes wrong,
+> `git checkout known-good-base` gets back to it.
+
 # Customizations
 
 Forked from [beekeeb/zmk-keyboard-toucan2](https://github.com/beekeeb/zmk-keyboard-toucan2) -- the Toucan2-specific
@@ -108,11 +112,12 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   mount angle out, making the pad behave like the Column Angle version.
   - Sign convention: **positive rotates movement counter-clockwise on screen, negative clockwise**. Change the
     magnitude if the correction is too strong or too weak.
-  - The sign comes from hardware testing, not from photos of the mount. `+35` and `+40` felt right on the
-    standalone build (`+40` is tagged `trackpad-dialed-in`), but `+44` was then reported as rotated the wrong
-    way, so the current value is **`-44`** per that feedback. The rotation maths did not change between those
-    builds, so if the direction ever seems to flip again, compare against the `+40` tag before changing anything
-    else.
+  - Tuned on hardware: `+35` was the right direction but too little, `+40` was very close (tagged
+    `trackpad-dialed-in`), and the current **`+41`** adds the last ~2% and is confirmed on hardware (tagged
+    `known-good-base`). `+44` overshot: over-correcting makes
+    the leftover error point the other way, which feels like the rotation has reversed even though it has not,
+    and `-44` tested unusable, confirming positive is the right direction. The angle is in whole degrees; adjust
+    a degree at a time.
   - `hscroll_shortcut` carries the same `angle` so two-finger swipes are judged in the same frame as the cursor;
     **always change the two together**.
   - In dongle mode this processing runs on the **dongle**, so rotation and acceleration changes mean reflashing
@@ -250,9 +255,12 @@ Because this trackpad enumerates over I2C/Bluetooth as a generic HID pointing de
 proprietary multitouch trackpad protocol, macOS applies its "external mouse" scroll-event handling to it instead
 of the "Trackpad" pane's smoothed/inertial scrolling -- scrolling feels comparatively abrupt and jittery even with
 the firmware-side `scroll` gesture enabled. [LinearMouse](https://linearmouse.app) fixes this at the OS level by
-re-applying smoothed/inertial scrolling to this specific device (matched by USB product name "Toucan", vendor ID
-`0x1D50`, product ID `0x615E`) without affecting other mice/trackpads. Config lives at
-`~/.config/linearmouse/linearmouse.json`; scroll direction is left un-reversed there since the firmware's
+re-applying smoothed/inertial scrolling to this specific device without affecting other mice/trackpads. The
+config is kept in this repo at [linearmouse/linearmouse.json](linearmouse/linearmouse.json), a copy of the live
+`~/.config/linearmouse/linearmouse.json`. It has schemes for both ways the keyboard can connect: standalone, as
+USB product name "Toucan" (vendor ID `0x1D50`, product ID `0x615E`), and dongle mode, as "Toucan Dongle". The
+dongle schemes are also pinned to that dongle's USB serial number, so a replacement dongle needs them updated.
+Scroll direction is left un-reversed there since the firmware's
 `invert-scroll-y` already produces natural-scrolling direction, so reversing it again in LinearMouse would cancel
 that out.
 

@@ -1,0 +1,250 @@
+{
+  "$schema" : "https:\/\/schema.linearmouse.app\/0.11.4",
+  "schemes" : [
+    {
+      "buttons" : {
+        "clickDebouncing" : {
+          "buttons" : [
+            0
+          ],
+          "timeout" : 50
+        },
+        "gesture" : {
+          "actions" : {
+            "down" : "appExpose",
+            "left" : "missionControl",
+            "right" : "missionControl",
+            "up" : "missionControl"
+          },
+          "enabled" : false,
+          "threshold" : 25,
+          "trigger" : {
+            "button" : 0,
+            "command" : false,
+            "control" : false,
+            "option" : false,
+            "shift" : false
+          }
+        },
+        "universalBackForward" : true
+      },
+      "if" : {
+        "device" : {
+          "productID" : "0x615e",
+          "productName" : "Toucan",
+          "vendorID" : "0x1d50"
+        }
+      },
+      "pointer" : {
+        "acceleration" : "unset",
+        "disableAcceleration" : false,
+        "redirectsToScroll" : false,
+        "speed" : "unset"
+      },
+      "scrolling" : {
+        "acceleration" : 1,
+        "distance" : "auto",
+        "modifiers" : {
+          "vertical" : {
+            "command" : {
+              "type" : "auto"
+            },
+            "control" : {
+              "type" : "auto"
+            },
+            "option" : {
+              "type" : "auto"
+            }
+          }
+        },
+        "reverse" : false,
+        "smoothed" : {
+          "horizontal" : {
+            "acceleration" : 1,
+            "bouncing" : false,
+            "enabled" : true,
+            "inertia" : 0.2,
+            "preset" : "easeInOut",
+            "response" : 0.68,
+            "speed" : 1.02
+          },
+          "vertical" : {
+            "acceleration" : 1.1,
+            "bouncing" : true,
+            "enabled" : true,
+            "inertia" : 0.74,
+            "preset" : "easeInOut",
+            "response" : 0.68,
+            "speed" : 1.02
+          }
+        },
+        "speed" : 0
+      }
+    },
+    {
+      "if" : {
+        "app" : "com.apple.Terminal",
+        "device" : {
+          "category" : "mouse",
+          "productID" : "0x615e",
+          "productName" : "Toucan",
+          "vendorID" : "0x1d50"
+        }
+      },
+      "scrolling" : {
+        "acceleration" : {
+          "vertical" : 4.74
+        },
+        "distance" : {
+          "vertical" : "auto"
+        },
+        "smoothed" : {
+          "vertical" : {
+            "enabled" : false
+          }
+        },
+        "speed" : {
+          "vertical" : 0.05
+        }
+      }
+    },
+    {
+      "buttons" : {
+        "universalBackForward" : true
+      },
+      "if" : {
+        "device" : {
+          "category" : "trackpad"
+        }
+      },
+      "pointer" : {
+        "acceleration" : "unset",
+        "disableAcceleration" : false,
+        "redirectsToScroll" : false,
+        "speed" : "unset"
+      },
+      "scrolling" : {
+        "acceleration" : 1,
+        "distance" : "auto",
+        "smoothed" : {
+          "enabled" : false
+        },
+        "speed" : 0
+      }
+    },
+    {
+      "if" : {
+        "app" : "com.apple.Terminal",
+        "device" : {
+          "category" : "mouse",
+          "productID" : "0xc548",
+          "productName" : "USB Receiver",
+          "vendorID" : "0x46d"
+        }
+      },
+      "scrolling" : {
+        "speed" : {
+          "vertical" : 0
+        }
+      }
+    },
+    {
+      "buttons" : {
+        "clickDebouncing" : {
+          "buttons" : [
+            0
+          ],
+          "timeout" : 0
+        }
+      },
+      "if" : {
+        "device" : {
+          "category" : "mouse",
+          "productID" : "0x615e",
+          "productName" : "Toucan Dongle",
+          "serialNumber" : "EA7F5FB395EA182C",
+          "vendorID" : "0x1d50"
+        }
+      },
+      "pointer" : {
+        "acceleration" : 0.7901,
+        "speed" : 0.0221
+      },
+      "scrolling" : {
+
+      }
+    },
+    {
+      "if" : {
+        "app" : "com.apple.Terminal",
+        "device" : {
+          "category" : "mouse",
+          "productID" : "0x615e",
+          "productName" : "Toucan Dongle",
+          "serialNumber" : "EA7F5FB395EA182C",
+          "vendorID" : "0x1d50"
+        }
+      },
+      "scrolling" : {
+        "acceleration" : {
+          "vertical" : 1
+        },
+        "distance" : {
+          "vertical" : "auto"
+        },
+        "smoothed" : {
+          "vertical" : {
+            "acceleration" : 1.1,
+            "bouncing" : true,
+            "enabled" : true,
+            "inertia" : 0.74,
+            "preset" : "easeInOut",
+            "response" : 1.83,
+            "speed" : 0.53
+          }
+        },
+        "speed" : {
+          "vertical" : 0
+        }
+      }
+    },
+    {
+      "if" : {
+        "app" : "com.apple.Safari",
+        "device" : {
+          "category" : "mouse",
+          "productID" : "0x615e",
+          "productName" : "Toucan Dongle",
+          "serialNumber" : "EA7F5FB395EA182C",
+          "vendorID" : "0x1d50"
+        }
+      },
+      "pointer" : {
+        "acceleration" : 0.2702,
+        "speed" : 0.0045
+      },
+      "scrolling" : {
+        "acceleration" : {
+          "vertical" : 1
+        },
+        "distance" : {
+          "vertical" : "auto"
+        },
+        "smoothed" : {
+          "vertical" : {
+            "acceleration" : 1.1,
+            "bouncing" : true,
+            "enabled" : true,
+            "inertia" : 0.74,
+            "preset" : "easeInOut",
+            "response" : 0.68,
+            "speed" : 1.02
+          }
+        },
+        "speed" : {
+          "vertical" : 0
+        }
+      }
+    }
+  ]
+}
