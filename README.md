@@ -100,21 +100,23 @@ leaves the trackpad completely dead since the wrong driver is loaded).
 
   To revert to the raw driver behavior: drop `&swipe_arbiter` from the listener's `input-processors` and set
   `three-finger-swipe-throttle-ms` back to `1200`.
-- **Pointer rotation**: this is beekeeb's **"Thumb Angle"** trackpad variant, where the pad is mounted rotated
-  **counter-clockwise** by roughly 40 degrees so it faces the thumb. The alternative **"Column Angle"** variant
-  mounts the same pad square to the case. Fingers arrive square to the keyboard either way, so on this variant a
-  stroke that feels "straight up" reaches the sensor as a diagonal. The `pointer_rotate` node
+- **Pointer rotation**: this is beekeeb's **"Thumb Angle"** trackpad variant, where the pad sits at roughly 40
+  degrees to the keyboard so it faces the thumb. The alternative **"Column Angle"** variant mounts the same pad
+  square to the case. Fingers arrive square to the keyboard either way, so on this variant a stroke that feels
+  "straight up" reaches the sensor as a diagonal. The `pointer_rotate` node
   ([src/input_processor_rotate.c](src/input_processor_rotate.c)) rotates the reported X/Y pair to cancel that
   mount angle out, making the pad behave like the Column Angle version.
-  - Sign convention: **positive is counter-clockwise on screen**. The correction matches the pad's own
-    counter-clockwise mount, so the angle is positive. Seen top-down, rotating the reported vector
-    counter-clockwise is the same as turning the pad's *virtual* axes clockwise, which is how it is easiest to
-    describe when tuning. Flip the sign if the cursor tracks the wrong diagonal; change the magnitude if the
-    correction is too strong or too weak.
-  - Tuned on hardware: `35` was the right direction but too little, `40` was confirmed good (tagged
-    `trackpad-dialed-in`), and the current `44` turns the virtual axes a further ~10% clockwise.
-    `hscroll_shortcut` carries the same `angle` so two-finger swipes are judged in the same frame as the cursor;
+  - Sign convention: **positive rotates movement counter-clockwise on screen, negative clockwise**. Change the
+    magnitude if the correction is too strong or too weak.
+  - The sign comes from hardware testing, not from photos of the mount. `+35` and `+40` felt right on the
+    standalone build (`+40` is tagged `trackpad-dialed-in`), but `+44` was then reported as rotated the wrong
+    way, so the current value is **`-44`** per that feedback. The rotation maths did not change between those
+    builds, so if the direction ever seems to flip again, compare against the `+40` tag before changing anything
+    else.
+  - `hscroll_shortcut` carries the same `angle` so two-finger swipes are judged in the same frame as the cursor;
     **always change the two together**.
+  - In dongle mode this processing runs on the **dongle**, so rotation and acceleration changes mean reflashing
+    the dongle (hold both far outer thumbs and hold `T` for 2 seconds), not the right half.
   - It runs first in the chain so the activation gate and acceleration curve both operate in the hand's frame.
   - Rotation needs both axes at once, but they arrive as two separate events. The driver always reports X
     immediately followed by Y for the same sample, so the processor buffers X, does the maths when Y arrives,

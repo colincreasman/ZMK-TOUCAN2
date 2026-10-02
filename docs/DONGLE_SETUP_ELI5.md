@@ -66,6 +66,27 @@ Bluetooth anymore — the dongle *is* the connection now. Just plug it in and ty
   `standalone_no_dongle/` folder onto the halves (after a settings reset), and
   you're back to normal.
 
+## Can I use the keyboard without the dongle?
+
+Not in dongle mode, and that's normal for any ZMK dongle: the dongle *is* the
+keyboard's brain, so the halves have nobody to talk to without it. ZMK's own docs
+list this as the main downside of a dongle.
+
+But you don't have to **plug it in**. The dongle has its own battery, so you can
+leave it in your bag or pocket, charged and switched on, and use the layer 3
+Bluetooth keys to pair with any computer wirelessly, the same way as before. The
+pairings are stored on the dongle.
+
+For a setup that never needs the dongle at all, use the `standalone_no_dongle/`
+files instead.
+
+## Which piece do I reflash for a change?
+
+| Change | Dongle mode | No-dongle mode |
+|---|---|---|
+| Keymap, combos, gesture shortcuts, trackpad rotation/speed | dongle | left half |
+| Trackpad hardware (tap, hold, sensitivity) | right half | right half |
+
 ## If something's weird
 
 - **Screen stuck on `SEARCHING`:** make sure both halves are powered on and no
