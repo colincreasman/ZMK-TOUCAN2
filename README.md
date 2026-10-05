@@ -159,11 +159,30 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   Settings 1:1. Press-and-hold-to-drag (`press-and-hold`, "click and hold") is also enabled: hold a finger down
   past `hold-time` (300ms) and the left button is held down, so movement drags and lifting releases -- adjust
   `hold-time` in [toucan_right.overlay](boards/shields/toucan/toucan_right.overlay) for a snappier or safer hold.
-  This is the Azoteq's equivalent of dragging; macOS's "tap to drag" tap-and-a-half (tap, lift, re-touch) is a
-  software behavior macOS layers on the trackpad rather than a hardware gesture, so it has no direct analog, but
-  the drag outcome is the same. There's likewise no firmware equivalent for Force Click/haptic feedback or
-  click-pressure firmness -- this is a flat capacitive trackpad with no physical click mechanism or haptic
-  actuator, so those macOS settings have no analog here.
+  The quicker double-tap-and-hold drag is covered below. There's no firmware equivalent for Force Click/haptic
+  feedback or click-pressure firmness -- this is a flat capacitive trackpad with no physical click mechanism or
+  haptic actuator, so those macOS settings have no analog here.
+- **Double-tap-and-hold drag** ("tap to drag"): tap, then put the finger straight back down, and the left button
+  stays held for as long as it is down -- movement drags, lifting drops. This is macOS's "Use trackpad for
+  dragging" without drag lock. The Azoteq has no such gesture, so a local `zmk,input-processor-tap-drag`
+  ([src/input_processor_tap_drag.c](src/input_processor_tap_drag.c)), configured on the `tap_drag` node in
+  [toucan_right.overlay](boards/shields/toucan/toucan_right.overlay), builds it from the driver's taps.
+  - A tap's press goes out at once, but its release is held back for `tap-window-ms` (200ms). If the finger
+    returns within that window the button just stays down and the drag starts; otherwise the release follows and
+    the tap was a normal click. The cost is that a lone tap's release, which is when most buttons act, lands
+    200ms late. That is inherent to tap-to-drag: the press has to stay down until it is clear no drag follows.
+  - A second quick tap is still a double click, and a third a triple click: the held click is ended and a fresh
+    one started, so it never turns into one long press. Nor is a drag ever sent as click-then-press, which the
+    host would read as a double-click-drag (selecting by word, or opening a file in Finder).
+  - Lifting mid-drag keeps holding for `release-delay-ms` (300ms), so the finger can be repositioned on the small
+    pad and the drag carried on. A tap during that grace period drops immediately.
+  - Scrolling, a three-finger swipe or a two-finger tap ends a held tap or drag at once.
+  - The hardware press-and-hold above still works on its own; during a tap-drag its duplicate press is absorbed.
+  - It runs on the **right half**, on the raw driver events before they cross the split link, so its timing is
+    measured at the source and it behaves the same with or without the dongle. Changing it means reflashing the
+    right half (hold both far outer thumbs and hold `P` for 2 seconds), not the dongle, and it is independent of
+    the `rotation-41` / `rotation-none` choice. Both are tagged with it as `rotation-41-tap-drag` and
+    `rotation-none-tap-drag`.
 
 # Dongle mode (PandaKB USB dongle)
 
@@ -210,7 +229,8 @@ and newer Macs may ask to allow the new USB accessory.
 ## Day to day
 
 - **Everything lives on the dongle**: the keymap, combos, gesture processing and the macOS/Windows gesture mode
-  (layer 3 `J`/`K`), which is stored on the dongle and therefore travels with it between computers.
+  (layer 3 `J`/`K`), which is stored on the dongle and therefore travels with it between computers. The one
+  exception is double-tap-and-hold drag, which runs on the right half.
 - **Updating firmware**: to update the dongle later without opening it, hold both far outer thumbs and hold `T`
   for 2 seconds. That is a third bootloader hold, retargeted at the central via the long-press behavior's
   `central` option. In standalone mode the central is the left half, so the same hold just duplicates `Q`.

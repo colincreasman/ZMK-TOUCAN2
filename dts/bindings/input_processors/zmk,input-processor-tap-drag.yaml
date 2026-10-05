@@ -1,0 +1,56 @@
+# Copyright (c) 2026 Colin Creasman
+# SPDX-License-Identifier: MIT
+
+description: |
+  Double-tap-and-hold dragging (macOS's "tap to drag", libinput's tap-and-drag)
+  for a trackpad whose driver turns a tap into a left click.
+
+  Tap, then put the finger straight back down: the left button stays held for
+  as long as the finger is down, so movement drags, and lifting releases it.
+
+  The tap's press goes out immediately, but its release is held back for
+  `tap-window-ms`. If a new touch starts in that window the button simply stays
+  down and the drag begins; otherwise the release follows and the tap was an
+  ordinary click. A second quick tap still produces a double click.
+
+  Lifting mid-drag keeps the button held for `release-delay-ms`, so a finger
+  can be repositioned on a small pad and the drag carried on. A tap during that
+  grace period drops immediately. Scrolling, swiping or a two-finger tap ends a
+  held tap or drag at once.
+
+  The driver's own press-and-hold gesture still passes through untouched when
+  no tap-drag is in progress.
+
+  Meant for the peripheral side of a `zmk,input-split` (or any chain that sees
+  the driver's raw events), ahead of anything that consumes INPUT_BTN_TOUCH.
+
+compatible: "zmk,input-processor-tap-drag"
+
+include: ip_zero_param.yaml
+
+properties:
+  tap-window-ms:
+    type: int
+    default: 200
+    description: >
+      How soon after a tap the finger must come back down to start a drag. Also
+      how long a plain tap's click is held before its release goes out. Raise it
+      if the double-tap is hard to land; lower it for snappier single clicks and
+      fewer accidental drags when moving off right after a tap.
+
+  release-delay-ms:
+    type: int
+    default: 300
+    description: >
+      How long the button stays held after lifting mid-drag, so the finger can be
+      repositioned. A touch inside this window continues the same drag. 0 releases
+      as soon as the finger lifts.
+
+  drag-distance:
+    type: int
+    default: 100
+    description: >
+      Pointer travel, in trackpad counts, after which a held tap counts as a real
+      drag. A tap during the release delay then just drops the drag, instead of
+      being treated as the second click of a double click. Keep it above the
+      trackpad's tap distance, since the hardware rejects taps that move further.
