@@ -93,10 +93,11 @@
         // still a plain click and only a deliberate hold starts a drag. Lower
         // for a snappier hold; raise if resting a finger starts unwanted drags.
         //
-        // Note this is press-and-hold, NOT macOS's "tap to drag" tap-and-a-half
-        // (tap, lift, re-touch): that lift-and-retouch chaining is a software
-        // behavior macOS adds on top of the trackpad, not an Azoteq hardware
-        // gesture, so it is not replicated here. The drag outcome is the same.
+        // The quicker way to drag is double-tap-and-hold (macOS's "tap to
+        // drag"): tap, then put the finger straight back down. That is not a
+        // hardware gesture, so it is built on top of the driver's taps by the
+        // tap_drag processor below. While a tap-drag holds the button, this
+        // gesture's own press is absorbed rather than sent twice.
         hold-time = <300>;
 
         // zoom; // Disabled: pinch-to-zoom (Cmd+/Cmd-) kept firing accidentally
@@ -120,6 +121,41 @@
     };
 };
 
+/ {
+    input_processors {
+        // Double-tap-and-hold to drag, like macOS's "tap to drag" (without
+        // drag lock): tap, then put the finger straight back down, and the left
+        // button stays held while it is down. A second quick tap is still a
+        // double click. See src/input_processor_tap_drag.c.
+        //
+        // It runs here on the right half, on the raw driver events and before
+        // they cross the split link, so its timing is measured at the source
+        // and it works the same in standalone and dongle mode. Only this half
+        // needs reflashing to change it; the rotation variants on the central
+        // are unaffected.
+        //
+        //   - tap-window-ms: how soon after a tap the finger must return to start
+        //     a drag. A plain tap's release also waits this long, since the
+        //     press has to stay down in case a drag follows. Raise it if the
+        //     double-tap is hard to land, lower it for snappier single clicks.
+        //   - release-delay-ms: lifting mid-drag keeps holding the button this
+        //     long so the finger can be repositioned on the small pad. A touch
+        //     inside it carries on the same drag, and a tap inside it drops at
+        //     once. 0 releases the moment the finger lifts.
+        //   - drag-distance: travel after which the held tap counts as a real
+        //     drag, so a tap during the release delay drops it instead of
+        //     adding a double click.
+        tap_drag: tap_drag {
+            compatible = "zmk,input-processor-tap-drag";
+            #input-processor-cells = <0>;
+            tap-window-ms = <200>;
+            release-delay-ms = <300>;
+            drag-distance = <100>;
+        };
+    };
+};
+
 &trackpad_split {
     device = <&tps43_trackpad>;
+    input-processors = <&tap_drag>;
 };

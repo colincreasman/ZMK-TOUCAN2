@@ -18,6 +18,10 @@ target_sources_ifdef(CONFIG_ZMK_INPUT_PROCESSOR_ROTATE app PRIVATE
     src/input_processor_rotate.c
 )
 
+target_sources_ifdef(CONFIG_ZMK_INPUT_PROCESSOR_TAP_DRAG app PRIVATE
+    src/input_processor_tap_drag.c
+)
+
 target_sources_ifdef(CONFIG_TOUCAN_OS_MODE app PRIVATE
     src/toucan_os_mode.c
 )
