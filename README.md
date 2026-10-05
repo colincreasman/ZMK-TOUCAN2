@@ -5,6 +5,10 @@
 > **Known-good baseline:** the tag `known-good-base` is the hardware-confirmed setup to build on (dongle mode,
 > 41° trackpad rotation, tuned gestures, macOS/Windows modes, LinearMouse config). If an experiment goes wrong,
 > `git checkout known-good-base` gets back to it.
+>
+> **Two trackpad options, otherwise identical:** `rotation-41` (the same commit as `known-good-base`) rotates the
+> pointer 41° to match the hand on the angled mount; `rotation-none` (this commit) applies no rotation. To switch,
+> flash the matching build to the dongle (or, without a dongle, the left half).
 
 # Customizations
 
@@ -80,13 +84,13 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   stroke is swallowed so a long swipe navigates one page instead of several. Raise/lower `threshold` to tune how
   deliberate the swipe must be.
 
-  `angle` matches the pointer rotation, and exists for the same reason: the pad is mounted at an angle, so a
-  swipe that is horizontal *to the hand* is a diagonal *to the sensor*. Without it you have to swipe along the
-  pad's physical axis while the cursor uses the hand's axis. The driver reports only the dominant axis per
-  sample, so both axes are accumulated across the gesture and the total is rotated before the direction is
-  judged. `y-invert` undoes the driver's `invert-scroll-y` so the rotation sees the same orientation as the
-  pointer axes. Vertical events pass through untouched, and firing requires the rotated horizontal component to
-  beat the vertical one, so ordinary scrolling can never trip it.
+  `angle` must match the pointer rotation. In this `rotation-none` build both are 0, so two-finger swipes are
+  judged on the pad's own horizontal axis, like the cursor; `rotation-41` sets it to 41 so that swipes horizontal
+  *to the hand* register. The driver reports only the dominant axis per sample, so both axes are accumulated
+  across the gesture (and, when `angle` is nonzero, the total is rotated) before the direction is judged.
+  `y-invert` undoes the driver's `invert-scroll-y` so the accumulated vector has the same orientation as the
+  pointer axes. Vertical events pass through untouched, and firing requires the horizontal component to beat the
+  vertical one, so ordinary scrolling can never trip it.
 
   **Three-finger swipes cannot be corrected this way.** The driver resolves those into discrete
   `INPUT_BTN_NORTH/EAST/SOUTH/WEST` events internally, using the raw sensor axes, so the direction is already
@@ -104,7 +108,9 @@ leaves the trackpad completely dead since the wrong driver is loaded).
 
   To revert to the raw driver behavior: drop `&swipe_arbiter` from the listener's `input-processors` and set
   `three-finger-swipe-throttle-ms` back to `1200`.
-- **Pointer rotation**: this is beekeeb's **"Thumb Angle"** trackpad variant, where the pad sits at roughly 40
+- **Pointer rotation**: **not applied in this build** (`rotation-none`): there is no `pointer_rotate` node, and
+  `hscroll_shortcut`'s angle is 0. The processor source stays in the repo, and the notes below describe the
+  `rotation-41` option. That option exists because this is beekeeb's **"Thumb Angle"** trackpad variant, where the pad sits at roughly 40
   degrees to the keyboard so it faces the thumb. The alternative **"Column Angle"** variant mounts the same pad
   square to the case. Fingers arrive square to the keyboard either way, so on this variant a stroke that feels
   "straight up" reaches the sensor as a diagonal. The `pointer_rotate` node
@@ -113,8 +119,8 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   - Sign convention: **positive rotates movement counter-clockwise on screen, negative clockwise**. Change the
     magnitude if the correction is too strong or too weak.
   - Tuned on hardware: `+35` was the right direction but too little, `+40` was very close (tagged
-    `trackpad-dialed-in`), and the current **`+41`** adds the last ~2% and is confirmed on hardware (tagged
-    `known-good-base`). `+44` overshot: over-correcting makes
+    `trackpad-dialed-in`), and **`+41`** adds the last ~2% and is confirmed on hardware (tagged
+    `known-good-base` and `rotation-41`). `+44` overshot: over-correcting makes
     the leftover error point the other way, which feels like the rotation has reversed even though it has not,
     and `-44` tested unusable, confirming positive is the right direction. The angle is in whole degrees; adjust
     a degree at a time.
