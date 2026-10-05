@@ -191,41 +191,14 @@
             track-remainders;
         };
 
-        // Compensates for the trackpad being mounted at an angle. This is
-        // beekeeb's "Thumb Angle" variant, where the pad sits at roughly 40
-        // degrees to the keyboard so it faces the thumb. The alternative
-        // "Column Angle" variant mounts the same pad square to the case.
-        // Fingers arrive square to the keyboard either way, so on this variant
-        // a stroke that feels "straight up" lands on the sensor as a diagonal,
-        // and rotating the reported vector cancels that out.
-        //
-        // Sign convention: positive rotates movement counter-clockwise on
-        // screen, negative clockwise. Tuned on hardware: +35 was the right
-        // direction but too little, +40 was very close (tagged
-        // `trackpad-dialed-in`), and +41 adds the last ~2%. +44 overshot:
-        // over-correcting makes the leftover error point the other way, which
-        // feels like the rotation has reversed even though it has not. -44
-        // tested unusable, confirming positive is the right direction. The
-        // angle is in whole degrees; adjust a degree at a time.
-        //
-        // hscroll_shortcut carries the same angle so two-finger swipes are
-        // judged in the same frame as the cursor. Always change the two
-        // together.
-        //
-        // This runs first so everything downstream (the activation gate and the
-        // acceleration curve) works in the hand's frame rather than the
-        // sensor's. Only pointer movement is affected: scroll and the two/three
-        // finger swipes are resolved inside the Azoteq driver, upstream of every
-        // input processor, so the gesture tuning tagged as `gestures-dialed-in`
-        // is untouched.
-        pointer_rotate: pointer_rotate {
-            compatible = "zmk,input-processor-rotate";
-            #input-processor-cells = <0>;
-            angle = <41>;
-            x-code = <INPUT_REL_X>;
-            y-code = <INPUT_REL_Y>;
-            reset-ms = <300>;
-        };
+        // No pointer rotation in this build: the cursor follows the pad's own
+        // axes. This is the `rotation-none` option. The other option,
+        // `rotation-41` (the same commit as `known-good-base`), adds a
+        // `pointer_rotate` node here and as the first entry in
+        // trackpad_listener's input-processors, and sets hscroll_shortcut's
+        // angle to 41, so the pointer matches the hand on beekeeb's "Thumb
+        // Angle" mount. Those two tags differ only in rotation; switch between
+        // them by flashing the dongle (or, without a dongle, the left half).
 
         // Pointer acceleration plus a movement activation gate. This runs FIRST
         // in trackpad_listener's chain for two reasons: it should shape the raw
@@ -306,30 +279,29 @@
         // remaining travel is swallowed so a long swipe navigates one page
         // instead of several.
         //
-        // `angle` matches pointer_rotate, and for the same reason: the pad is
-        // mounted at an angle, so a swipe that is horizontal to the hand is a
-        // diagonal to the sensor. Without it you have to swipe along the pad's
-        // physical axis while the cursor uses the hand's axis, which is the
-        // mismatch this fixes. The gesture itself is decided in the driver for
-        // three-finger swipes, but two-finger swipes arrive as plain scroll, so
-        // they can still be rotated here.
+        // `angle` is 0 in this build, matching the unrotated cursor: two-finger
+        // swipes are judged on the pad's own horizontal axis. The `rotation-41`
+        // option sets it to 41 instead, the same angle as its pointer
+        // rotation, so that swipes horizontal to the hand register on that
+        // build. The two angles must always match.
         //
         // The driver reports only the dominant axis per sample, so both axes
         // are accumulated across the gesture to reconstruct the direction.
         // Vertical events pass through untouched, keeping normal scrolling
-        // intact, and firing requires the rotated horizontal component to beat
-        // the vertical one so scrolling can never trip it.
+        // intact, and firing requires the horizontal component to beat the
+        // vertical one so scrolling can never trip it.
         //
-        // y-invert undoes the driver's `invert-scroll-y` so the rotation sees
-        // the same orientation as the pointer axes. Binding order is
-        // (negative, positive) on the rotated axis.
+        // y-invert undoes the driver's `invert-scroll-y` so the accumulated
+        // vector has the same orientation as the pointer axes (only its sign
+        // matters, and only when angle is nonzero). Binding order is
+        // (negative, positive) on the horizontal axis.
         hscroll_shortcut: hscroll_shortcut {
             compatible = "zmk,input-processor-scroll-shortcut";
             #input-processor-cells = <0>;
             event-code = <INPUT_REL_HWHEEL>;
             y-event-code = <INPUT_REL_WHEEL>;
             y-invert;
-            angle = <41>;
+            angle = <0>;
             threshold = <120>;
             reset-ms = <300>;
             bindings = <&os_nav_fwd>, <&os_nav_back>;
@@ -416,7 +388,7 @@
         // toucan_right.overlay, `zoom;` removed), so it would never fire
         // anyway. Left in the tree (unreferenced) rather than deleted, in
         // case zoom is ever re-enabled.
-        input-processors = <&pointer_rotate>, <&pointer_accel>, <&swipe_arbiter>, <&hscroll_shortcut>, <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 100>, <&is_touching_processor>, <&swipe_button_mapper>;
+        input-processors = <&pointer_accel>, <&swipe_arbiter>, <&hscroll_shortcut>, <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 100>, <&is_touching_processor>, <&swipe_button_mapper>;
         scroller {
             layers = <1 2>;
             input-processors = <
