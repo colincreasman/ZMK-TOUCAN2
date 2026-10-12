@@ -76,8 +76,9 @@ endif
 
 # Standalone left half with englmaxi's dongle_display status screen on its
 # nice!view instead of the gem screen: the same bongo cat, modifiers and battery
-# readout the USB dongle's OLED shows, plus the WPM meter, which this taller
-# panel has room for. Dark theme, so it matches the gem screen and the OLED.
+# readout the USB dongle's OLED shows. Dark theme, so it matches the gem screen
+# and the OLED. The WPM meter is switched on in build.yaml: dongle_display
+# defines it with `default n`, and the first default parsed wins.
 if SHIELD_TOUCAN_LEFT && SHIELD_DONGLE_DISPLAY && ZMK_SPLIT_ROLE_CENTRAL
 
 config ZMK_DISPLAY_INVERT
@@ -87,9 +88,6 @@ config ZMK_DONGLE_DISPLAY_DONGLE_BATTERY
     default y
 
 config ZMK_DONGLE_DISPLAY_MAC_MODIFIERS
-    default y
-
-config ZMK_DONGLE_DISPLAY_WPM
     default y
 
 endif
