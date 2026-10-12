@@ -1,4 +1,6 @@
-if(CONFIG_ZMK_DISPLAY AND CONFIG_NICE_VIEW_WIDGET_STATUS)
+# Stand down when englmaxi's dongle_display shield is listed too: it supplies the
+# status screen instead, and both define zmk_display_status_screen().
+if(CONFIG_ZMK_DISPLAY AND CONFIG_NICE_VIEW_WIDGET_STATUS AND NOT CONFIG_SHIELD_DONGLE_DISPLAY)
   zephyr_library_include_directories(${CMAKE_SOURCE_DIR}/include)
   zephyr_library_sources(custom_status_screen.c)
   zephyr_library_sources(assets/images.c)
