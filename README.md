@@ -184,6 +184,14 @@ leaves the trackpad completely dead since the wrong driver is loaded).
     the `rotation-41` / `rotation-none` choice. Both are tagged with it as `rotation-41-tap-drag` and
     `rotation-none-tap-drag`.
 
+- **Status screen**: the left half's nice!view normally runs the `nice_view_gem` screen (battery and profile
+  arcs, layer name, WPM dot chart). The `toucan_left_dongle_screen` build swaps in the status screen the
+  USB dongle's OLED uses ([englmaxi/zmk-dongle-display](https://github.com/englmaxi/zmk-dongle-display)):
+  the animated bongo cat, macOS modifier icons, layer name, output/profile, both halves' batteries and a WPM
+  meter. It is otherwise identical to the standard standalone left firmware. Listing `dongle_display` after
+  `nice_view_gem` is all it takes: the gem shield then only provides the display node, and the screen's
+  options are defaulted in `toucan/Kconfig.defconfig`.
+
 # Dongle mode (PandaKB USB dongle)
 
 The keyboard can run through [PandaKB's ZMK dongle](https://pandakb.com/shop/keyboard-kit/pandakb-zmk-split-keyboard-dongle/)
@@ -203,6 +211,7 @@ halves cannot connect to a computer without the dongle**. Switching modes means 
 | `toucan_left_dongle_mode` | left half | dongle |
 | `toucan_right rgbled_adapter-seeeduino_xiao_ble-zmk` | right half | **both** -- the right half is a peripheral either way |
 | `toucan_left rgbled_adapter nice_view_gem-seeeduino_xiao_ble-zmk` | left half | standalone |
+| `toucan_left_dongle_screen` | left half | standalone, with the dongle's status screen (below) |
 | `settings_reset_dongle` | dongle | reset (nice!nano board) |
 | `settings_reset-seeeduino_xiao_ble-zmk` | either half | reset (XIAO board) |
 
