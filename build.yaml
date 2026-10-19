@@ -24,13 +24,6 @@ include:
     shield: toucan_left rgbled_adapter nice_view_gem
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y
-  # Same standalone left half, with the dongle's status screen (bongo cat,
-  # modifiers, WPM) on its nice!view in place of the gem screen.
-  - board: seeeduino_xiao_ble
-    shield: toucan_left rgbled_adapter nice_view_gem dongle_display
-    snippet: studio-rpc-usb-uart
-    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_DONGLE_DISPLAY_WPM=y
-    artifact-name: toucan_left_dongle_screen
   # The right half is a peripheral in BOTH modes, so this one build serves
   # standalone and dongle mode alike.
   - board: seeeduino_xiao_ble
