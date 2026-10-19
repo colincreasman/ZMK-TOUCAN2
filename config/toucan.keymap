@@ -24,6 +24,15 @@
 #define THUMBS 36 37 38 39 40 41                          // thumb keys
 #define UNUSED 0 11 12 23 24 35                           // extra pinky-column keys (no totemist equivalent)
 
+// Layer names are for the USB dongle's OLED, so only the dongle build gets
+// them (toucan_dongle.overlay defines TOUCAN_LAYER_NAMES). The left half's
+// standalone gem screen keeps its stock `L#n` layer labels.
+#ifdef TOUCAN_LAYER_NAMES
+#define LAYER_NAME(name) display-name = name;
+#else
+#define LAYER_NAME(name)
+#endif
+
 #define L0 0
 #define L1 1
 #define L2 2
@@ -172,7 +181,7 @@
         compatible = "zmk,keymap";
 
         layer_zero {
-            display-name = "ABC";
+            LAYER_NAME("ABC")
             bindings = <
         //     ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮   ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮
                 &none       &kp Q       &kp W       &kp E       &kp R       &kp T           &kp Y       &kp U       &kp I       &kp O       &kp P       &none
@@ -188,7 +197,7 @@
 
 
         layer_one {
-            display-name = "NUM";
+            LAYER_NAME("NUM")
             bindings = <
         //     ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮   ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮
                 &none       &kp ESC     &kp N1      &kp N2      &kp N3      &trans          &trans      &trans      &kp UP      &kp MINUS   &kp EQUAL   &none
@@ -205,7 +214,7 @@
 
 
         layer_two {
-            display-name = "MED";
+            LAYER_NAME("MED")
             bindings = <
         //     ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮   ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮
                 &none       &trans      &trans      &trans      &trans      &trans          &kp C_PREV  &kp C_PP    &kp C_NEXT  &kp C_VOL_DN   &kp C_VOL_UP   &none
@@ -235,7 +244,7 @@
         // (the left half when standalone). It sits on the inner column, between
         // the two halves' pinky holds, like the dongle sits between the halves.
         layer_three {
-            display-name = "SYS";
+            LAYER_NAME("SYS")
             bindings = <
                 &none &bhold &bt BT_CLR &none &none &bhold_dongle   &none &none &none &none &bhold &none
                 &none &bt BT_SEL 0 &bt BT_SEL 1 &bt BT_SEL 2 &bt BT_SEL 3 &none   &none &os_mode 0 &os_mode 1 &none &none &none
@@ -249,7 +258,7 @@
         // thumb cluster can left/middle/right-click without needing a
         // dedicated held key. Mirrors the stock Toucan2 keymap's mouse layer.
         layer_four {
-            display-name = "PTR";
+            LAYER_NAME("PTR")
             bindings = <
                 &trans &trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans &trans
                 &trans &trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans &trans
