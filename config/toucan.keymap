@@ -28,9 +28,9 @@
 // them (toucan_dongle.overlay defines TOUCAN_LAYER_NAMES). The left half's
 // standalone gem screen keeps its stock `L#n` layer labels.
 #ifdef TOUCAN_LAYER_NAMES
-#define LAYER_NAME(name) display-name = name;
+#define LAYER_NAME(label) display-name = label;
 #else
-#define LAYER_NAME(name)
+#define LAYER_NAME(label)
 #endif
 
 #define L0 0
