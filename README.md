@@ -244,8 +244,9 @@ and newer Macs may ask to allow the new USB accessory.
   Bluetooth profile keys. Over USB, none of that is needed.
 - **Screens**: the dongle's OLED shows the active layer, modifiers, output and battery levels
   ([englmaxi/zmk-dongle-display](https://github.com/englmaxi/zmk-dongle-display)). Layers are named `ABC`, `NUM`,
-  `MED`, `SYS` and `PTR` so it has something to show; three characters also keeps the left half's standalone
-  layer arc the same width as its old `L#n` fallback. In dongle mode the left half's screen shows its own
+  `MED`, `SYS` and `PTR` so it has something to show. The names are compiled into the dongle build only
+  (`TOUCAN_LAYER_NAMES` in `toucan_dongle.overlay`), so the left half's standalone screen keeps beekeeb's stock
+  `L#n` layer labels. In dongle mode the left half's screen shows its own
   battery and whether its link to the dongle is up.
 - **The dongle never deep-sleeps.** Deep sleep is only woken by a key press, and the dongle has no keys.
 
