@@ -11,6 +11,10 @@
 
 #include "toucan.dtsi"
 
+// Name the layers for the OLED. The keymap only sets display-name when this is
+// defined, so the left half's standalone screen keeps its stock `L#n` labels.
+#define TOUCAN_LAYER_NAMES
+
 / {
     chosen {
         zmk,kscan = &mock_kscan;
