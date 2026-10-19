@@ -156,7 +156,7 @@
 
     combos {
         compatible = "zmk,combos";
-        // Letter combos need both keys within 15ms (ZMK's default is 50ms), so
+        // Letter combos need both keys within 25ms (ZMK's default is 50ms), so
         // quick rolls while typing, like O then P, stay as plain letters.
         combo_esc_op {
             timeout-ms = <25>;
