@@ -1,19 +1,15 @@
 if SHIELD_NICE_VIEW_GEM
 
-# Listing englmaxi's dongle_display shield after this one swaps in that status
-# screen (bongo cat, modifiers, WPM). This shield then only provides the
-# display node, so its LVGL sizing defaults give way to dongle_display's.
-
 config TOUCAN_STATUS_SCREEN
     int "Status screen style (0 to 2)"
     default 2
     range 0 2
 
 config LV_Z_VDB_SIZE
-    default 100 if !SHIELD_DONGLE_DISPLAY
+    default 100
 
 config LV_DPI_DEF
-    default 161 if !SHIELD_DONGLE_DISPLAY
+    default 161
 
 config LV_Z_BITS_PER_PIXEL
     default 1
@@ -31,13 +27,13 @@ choice ZMK_DISPLAY_STATUS_SCREEN
 endchoice
 
 config LV_Z_MEM_POOL_SIZE
-    default 4096 if ZMK_DISPLAY_STATUS_SCREEN_CUSTOM && !SHIELD_DONGLE_DISPLAY
+    default 4096 if ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
 
 config ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
     imply NICE_VIEW_WIDGET_STATUS
 
 config NICE_VIEW_WIDGET_STATUS
-    default y if !SHIELD_DONGLE_DISPLAY
+    default y
     select LV_USE_LABEL
     select LV_USE_IMG
     select LV_USE_CANVAS
