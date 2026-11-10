@@ -1,0 +1,22 @@
+# Copyright (c) 2026 Colin Creasman
+# SPDX-License-Identifier: MIT
+
+description: |
+  Steps through Windows' Alt+Tab or the macOS AltTab app from discrete gestures.
+
+  Parameter 0 moves to the next window and 1 to the previous one. Alt/Option is held
+  across consecutive actuations so the switcher stays open, then released
+  once they stop, which switches to the selected window. Pressing any key
+  releases Alt at once.
+
+compatible: "zmk,behavior-win-switcher"
+
+include: one_param.yaml
+
+properties:
+  session-ms:
+    type: int
+    default: 1000
+    description: >
+      How long Alt stays held after the last actuation. Raise it if the
+      switcher closes before the next swipe lands; lower it to switch sooner.

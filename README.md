@@ -46,16 +46,20 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   | Gesture | macOS | Windows |
   |---|---|---|
   | 3-finger up | `Opt+\`` (Mission Control) | `Win+Tab` (Task View) |
-  | 3-finger left | `Cmd+Shift+\`` (previous window) | `Alt+Shift+Tab` |
-  | 3-finger right | `Cmd+\`` (next window) | `Alt+Tab` |
+  | 3-finger down | `Cmd+W` (close window/tab) | `Ctrl+W` (close tab) |
+  | 3-finger left | `Opt+Shift+Tab` (AltTab back) | `Alt+Shift+Tab` (switcher back) |
+  | 3-finger right | `Opt+Tab` (AltTab forward) | `Alt+Tab` (switcher forward) |
   | 2-finger left | `Cmd+[` (back) | `Alt+Left` |
   | 2-finger right | `Cmd+]` (forward) | `Alt+Right` |
 
-  One Windows caveat: `Alt+Tab` is a *stateful* switcher, like the AltTab app the macOS bindings originally used.
-  A discrete swipe right steps one window forward, which is what is wanted, but a lone swipe left sends
-  `Alt+Shift+Tab` with no switcher open, so Windows steps backwards through most-recent-window order rather than
-  reversing an open switcher. Swiping right then left in quick succession behaves as expected.
-- **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) maps standalone 3-finger swipes to the `os_*` behaviors above. On macOS, up sends `Option+\`` -- this Mac remaps Mission Control to `Opt+\`` under System Settings > Keyboard > Keyboard Shortcuts > Mission Control, so the `Ctrl+Up` default does nothing here. Left/right cycle windows with `Cmd+\`` / `Cmd+Shift+\``, matching the thumb-button mapping on the Logi mouse. These replaced [AltTab](https://alt-tab-macos.netlify.app/)'s `Opt+Tab` / `Opt+Shift+Tab`, which cannot work from a swipe: AltTab only interprets `Shift+Tab` while its switcher is already held open, so a standalone `Opt+Shift+Tab` just leaked the raw keystroke into the focused app. The `Cmd+\`` pair is stateless, so a single discrete press/release does the whole job. Down stays unbound since every other Mission Control shortcut is unchecked on this Mac. The driver emits horizontal and vertical events independently, so swipe reasonably straight to avoid firing two shortcuts at once; `three-finger-swipe-throttle-ms` (40ms) plus the swipe arbiter below keep one motion from repeating.
+  Windows' `Alt+Tab` and the macOS [AltTab app](https://alt-tab-macos.netlify.app/) are *stateful* switchers,
+  so both OS modes' left/right swipes go through
+  `zmk,behavior-win-switcher` ([src/behavior_win_switcher.c](src/behavior_win_switcher.c)). The first swipe presses
+  and holds `Alt` (`Option` on Mac) and taps `Tab` (right) or `Shift+Tab` (left; a lone left swipe jumps to the
+  far end of the list); further swipes step the open switcher either way. `Alt`/`Option` is released
+  `session-ms` (1s) after the last swipe, committing the selection, or immediately when any key is pressed.
+  AltTab must be running on the Mac with `Option+Tab` / `Option+Shift+Tab` configured.
+- **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) maps standalone 3-finger swipes to the `os_*` behaviors above. On macOS, up sends `Option+\`` -- this Mac remaps Mission Control to `Opt+\`` under System Settings > Keyboard > Keyboard Shortcuts > Mission Control, so the `Ctrl+Up` default does nothing here. Left/right use the held switcher described above, replacing the former `Cmd+\`` / `Cmd+Shift+\`` shortcuts on Mac. Down sends `Cmd+W` on macOS and `Ctrl+W` on Windows. The driver emits horizontal and vertical events independently, so swipe reasonably straight to avoid firing two shortcuts at once; `three-finger-swipe-throttle-ms` (40ms) plus the swipe arbiter below keep one motion from repeating.
 
 > **Gesture tuning is dialled in -- do not change these values casually.**
 > Hardware testing confirmed the 2- and 3-finger gestures now trigger reliably and never cross-fire: 3-finger up

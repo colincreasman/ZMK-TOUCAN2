@@ -123,6 +123,16 @@
             #binding-cells = <1>;
         };
 
+        // Shared by Windows Alt+Tab and the macOS AltTab app. Holds
+        // Alt/Option across consecutive swipes so the switcher stays open:
+        // right taps Tab, left taps Shift+Tab. Alt is let go session-ms after
+        // the last swipe, or as soon as any key is pressed.
+        win_switcher: win_switcher {
+            compatible = "zmk,behavior-win-switcher";
+            #binding-cells = <1>;
+            session-ms = <1000>;
+        };
+
         // 3-finger up. macOS: Mission Control, remapped to Opt+` on this Mac.
         // Windows: Task View.
         os_swipe_up: os_swipe_up {
@@ -131,27 +141,27 @@
             bindings = <&kp LA(GRAVE)>, <&kp LG(TAB)>;
         };
 
+        // 3-finger down. macOS: Cmd+W. Windows: Ctrl+W.
+        os_swipe_down: os_swipe_down {
+            compatible = "zmk,behavior-os-select";
+            #binding-cells = <0>;
+            bindings = <&kp LG(W)>, <&kp LC(W)>;
+        };
+
         // 3-finger swipe LEFT (driver reports it as EAST, see below).
-        // macOS: previous window. Windows: Alt+Shift+Tab.
+        // Previous window: Option+Shift+Tab on macOS, Alt+Shift+Tab on Windows.
         os_swipe_left: os_swipe_left {
             compatible = "zmk,behavior-os-select";
             #binding-cells = <0>;
-            bindings = <&kp LG(LS(GRAVE))>, <&kp LA(LS(TAB))>;
+            bindings = <&win_switcher 1>, <&win_switcher 1>;
         };
 
         // 3-finger swipe RIGHT (driver reports it as WEST).
-        // macOS: next window. Windows: Alt+Tab.
-        //
-        // Unlike macOS's stateless Cmd+`, Windows' Alt+Tab is a held-switcher
-        // shortcut: a discrete press/release steps one window forward, which is
-        // the intended behavior here, but Alt+Shift+Tab going backwards only
-        // makes sense once the switcher is open. Swiping right then left in
-        // quick succession works; a lone left swipe steps backwards through the
-        // most-recent-window order instead.
+        // Next window: Option+Tab on macOS, Alt+Tab on Windows.
         os_swipe_right: os_swipe_right {
             compatible = "zmk,behavior-os-select";
             #binding-cells = <0>;
-            bindings = <&kp LG(GRAVE)>, <&kp LA(TAB)>;
+            bindings = <&win_switcher 0>, <&win_switcher 0>;
         };
 
         // 2-finger horizontal swipe, page navigation.
@@ -325,17 +335,10 @@
         //   - Up -> Mission Control on macOS (remapped to Opt+` on this Mac,
         //     NOT the Ctrl+Up default, so Ctrl+Up did nothing at all here) and
         //     Task View on Windows.
-        //   - Left/right -> window cycling. macOS uses the stateless
-        //     Cmd+` / Cmd+Shift+` pair, matching the mouse thumb-button
-        //     mapping. These replaced AltTab's Opt+Tab / Opt+Shift+Tab, which
-        //     could not work from a swipe: AltTab only interprets Shift+Tab
-        //     while its switcher is already open, so a standalone
-        //     Opt+Shift+Tab just leaked the raw keystroke to the focused app.
-        //     Windows uses Alt+Tab / Alt+Shift+Tab; see os_swipe_right for the
-        //     caveat that Windows' switcher is stateful in the same way.
-        //   - Down is left unbound: every other Mission Control shortcut
-        //     ("Application windows" = Ctrl+Down, "Show Desktop" = F11) is
-        //     unchecked on this Mac, so there is nothing useful to send.
+        //   - Left/right -> window cycling through win_switcher: macOS AltTab
+        //     uses Option+Tab / Option+Shift+Tab; Windows uses Alt+Tab /
+        //     Alt+Shift+Tab. Alt/Option stays held across consecutive swipes.
+        //   - Down -> Cmd+W on macOS, Ctrl+W on Windows.
         //
         // The actual per-OS keycodes live on the os_* behaviors at the top of
         // this file.
@@ -355,7 +358,7 @@
             compatible = "zmk,input-processor-behaviors";
             #input-processor-cells = <0>;
             codes = <INPUT_BTN_NORTH INPUT_BTN_EAST INPUT_BTN_SOUTH INPUT_BTN_WEST>;
-            bindings = <&os_swipe_up>, <&os_swipe_left>, <&none>, <&os_swipe_right>;
+            bindings = <&os_swipe_up>, <&os_swipe_left>, <&os_swipe_down>, <&os_swipe_right>;
         };
     };
 
