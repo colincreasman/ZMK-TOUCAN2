@@ -24,6 +24,12 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   dongle, and the right-hand home row carries
   the macOS/Windows selector (`J`/`K`). `layer_four` remains the mouse-click
   layer because `is_touching_processor` in `toucan.dtsi` hardcodes `&mo 4` while the trackpad is touched.
+- **Sysdiagnose guard**: `.` on the base layer is `&hyper_guard DOT` instead of `&kp DOT`. It behaves exactly
+  like `&kp`, except the key is dropped while Ctrl, Shift, Alt and GUI are all held. Resting four fingers on the
+  left homerow mods resolves them all as holds, and with `.` that is macOS's sysdiagnose chord
+  (`Ctrl+Opt+Shift+Cmd+.`), which kept firing by accident: a ~3 minute system stall, a Bluetooth reconnect and
+  an unsolicited Finder window in `/private/var/tmp`. Implemented by `zmk,behavior-hyper-guard`
+  ([src/behavior_hyper_guard.c](src/behavior_hyper_guard.c)).
 - **General configs**: [boards/shields/toucan/toucan_left.conf](boards/shields/toucan/toucan_left.conf) and [boards/shields/toucan/toucan_right.conf](boards/shields/toucan/toucan_right.conf)
 - **Host-OS mode**: the trackpad gestures send different shortcuts on macOS and Windows. Which set is used is a
   **runtime** setting, not a build option, because this keyboard moves between machines over its Bluetooth

@@ -153,6 +153,14 @@
             bindings = <&bootloader>;
             central;
         };
+        // `&kp` that drops the key while Ctrl, Shift, Alt and GUI are all
+        // held. Resting on the four left homerow mods resolves them all as
+        // holds, and with `.` that is macOS's sysdiagnose chord, which kept
+        // firing by accident. Any other modifier combination is unaffected.
+        hyper_guard: hyper_guard {
+            compatible = "zmk,behavior-hyper-guard";
+            #binding-cells = <1>;
+        };
     };
 
     combos {
@@ -189,7 +197,7 @@
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
                 &none       HRML(A,         S,          D,          F)      &kp G           &kp H       HRMR(J,         K,          L,          BSLH)   &none
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
-                &none       &kp Z       &kp X       &kp C       &kp V       &kp B           &kp N       &kp M       &kp COMMA   &kp DOT     &kp FSLH    &none
+                &none       &kp Z       &kp X       &kp C       &kp V       &kp B           &kp N       &kp M       &kp COMMA   &hyper_guard DOT &kp FSLH    &none
         //     ╰───────────┴───────────┴───────────├───────────├───────────┼───────────┤   ├───────────├───────────┼───────────┴───────────┴───────────╯
                                                 &ht LG(C) ESC  &kp RET   &ht LSHFT TAB    &lt L1 SPACE  &kp BSPC   &ht RG(V) ESC
         //                                         ╰───────────┴───────────┴───────────╯   ╰───────────┴───────────┴───────────╯

@@ -1,0 +1,14 @@
+# Copyright (c) 2026 Colin Creasman
+# SPDX-License-Identifier: MIT
+
+description: |
+  Taps a keycode like `&kp`, except when Ctrl, Shift, Alt and GUI are all held.
+
+  With homerow mods, resting four fingers on the home row resolves every mod as
+  held, so the next key can land as a Ctrl+Alt+Shift+GUI chord. On macOS that
+  chord plus `.` starts a sysdiagnose, so the key is dropped while all four are
+  held. Any other modifier combination passes through unchanged.
+
+compatible: "zmk,behavior-hyper-guard"
+
+include: one_param.yaml

@@ -81,6 +81,15 @@ config ZMK_BEHAVIOR_WIN_SWITCHER
       Step through Windows Alt+Tab or the macOS AltTab app from discrete
       gestures, holding Alt/Option across consecutive actuations.
 
+DT_COMPAT_ZMK_BEHAVIOR_HYPER_GUARD := zmk,behavior-hyper-guard
+
+config ZMK_BEHAVIOR_HYPER_GUARD
+    bool "Hyper-chord guard behavior"
+    default $(dt_compat_enabled,$(DT_COMPAT_ZMK_BEHAVIOR_HYPER_GUARD))
+    help
+      Tap a keycode unless Ctrl, Shift, Alt and GUI are all held, so homerow
+      mods can't fire macOS's sysdiagnose chord by accident.
+
 config TOUCAN_OS_MODE
     bool
     help
