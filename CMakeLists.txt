@@ -47,6 +47,9 @@ target_sources_ifdef(CONFIG_ZMK_BEHAVIOR_OS_STATUS app PRIVATE
 
 # Raises key events, which only the central half can send to a host.
 if ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+  if(CONFIG_ZMK_BEHAVIOR_OS_STATUS AND CONFIG_ZMK_KEYMAP_SETTINGS_STORAGE)
+    target_sources(app PRIVATE src/toucan_maintenance_migration.c)
+  endif()
   target_sources_ifdef(CONFIG_ZMK_BEHAVIOR_WIN_SWITCHER app PRIVATE
       src/behavior_win_switcher.c
   )

@@ -9,6 +9,7 @@
 #define CONFIG_ZMK_SPLIT 1
 #define CONFIG_ZMK_SPLIT_ROLE_CENTRAL TEST_CENTRAL
 #define CONFIG_ZMK_BLE 1
+#define CONFIG_ZMK_KEYMAP_SETTINGS_STORAGE TEST_CENTRAL
 #define CONFIG_ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING TEST_CENTRAL
 #define IS_ENABLED(x) (x)
 #define ARG_UNUSED(x) (void)(x)
@@ -57,6 +58,10 @@ static int k_work_reschedule(struct k_work_delayable *work, int delay) {
 #include "../src/toucan_os_status.h"
 static uint8_t selected_slot;
 static enum toucan_os_mode selected_mode;
+static bool settings_ready;
+static unsigned migrations;
+bool toucan_os_mode_settings_loaded(void) { return settings_ready; }
+int toucan_maintenance_migrate(void) { migrations++; return 0; }
 uint8_t toucan_os_mode_host_slot(void) { return selected_slot; }
 enum toucan_os_mode toucan_os_mode_get(void) { return selected_mode; }
 static struct toucan_os_status last_status;
@@ -88,14 +93,18 @@ int main(void) {
     status_sync_work.handler(NULL);
     assert(transmitted.param1 == 0 && transmitted.param2 == TOUCAN_OS_MAC);
     assert(status_events == 1 && last_status.valid);
+    assert(migrations == 0); // Endpoint events can arrive before settings load.
+    settings_ready = true;
     selected_slot = 3; // Bluetooth profile 2.
     selected_mode = TOUCAN_OS_WIN;
     status_sync_listener(NULL); // Endpoint/profile or reconnect battery event.
     status_sync_work.handler(NULL);
     assert(transmitted.param1 == 3 && transmitted.param2 == TOUCAN_OS_WIN);
     assert(status_events == 2 && last_status.slot == 3);
+    assert(migrations == 1);
     status_sync_work.handler(NULL);
     assert(status_events == 2);
+    assert(migrations == 1);
     puts("PASS: central display snapshot, slot/OS refresh, split payload, duplicate suppression");
 #else
     assert(!toucan_os_status_get().valid);

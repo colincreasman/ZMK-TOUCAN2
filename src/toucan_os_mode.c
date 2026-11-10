@@ -17,6 +17,9 @@
 #endif
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
+static bool settings_loaded = !IS_ENABLED(CONFIG_SETTINGS);
+
+bool toucan_os_mode_settings_loaded(void) { return settings_loaded; }
 
 // One mode per host: slot 0 is USB and slot 1 + n is Bluetooth profile n, so
 // pairing a Mac on one profile and a Windows PC on another switches gestures
@@ -102,7 +105,16 @@ static int toucan_os_mode_handle_set(const char *name, size_t len, settings_read
     return 0;
 }
 
-SETTINGS_STATIC_HANDLER_DEFINE(toucan_os_mode, "toucan", NULL, toucan_os_mode_handle_set, NULL,
+static int toucan_os_mode_settings_commit(void) {
+    settings_loaded = true;
+#if IS_ENABLED(CONFIG_ZMK_BEHAVIOR_OS_STATUS)
+    toucan_os_status_refresh();
+#endif
+    return 0;
+}
+
+SETTINGS_STATIC_HANDLER_DEFINE(toucan_os_mode, "toucan", NULL, toucan_os_mode_handle_set,
+                               toucan_os_mode_settings_commit,
                                NULL);
 
 static int toucan_os_mode_init(void) {

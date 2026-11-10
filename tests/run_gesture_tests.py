@@ -11,14 +11,18 @@ headers = [
     "zephyr/device.h",
     "zephyr/kernel.h",
     "zephyr/init.h",
+    "zephyr/settings/settings.h",
     "zephyr/logging/log.h",
     "zephyr/dt-bindings/input/input-event-codes.h",
     "zephyr/input/input.h",
     "drivers/behavior.h",
     "drivers/input_processor.h",
     "dt-bindings/zmk/keys.h",
+    "dt-bindings/zmk/bt.h",
     "zmk/behavior.h",
     "zmk/event_manager.h",
+    "zmk/keymap.h",
+    "zmk/physical_layouts.h",
     "zmk/events/keycode_state_changed.h",
     "zmk/events/endpoint_changed.h",
     "zmk/events/ble_active_profile_changed.h",
@@ -37,6 +41,7 @@ with tempfile.TemporaryDirectory(prefix="toucan-gesture-test-") as directory:
         ("gesture_session", "gesture_session.c", []),
         ("os_status_central", "os_status.c", ["-DTEST_CENTRAL=1"]),
         ("os_status_peripheral", "os_status.c", ["-DTEST_CENTRAL=0"]),
+        ("maintenance_migration", "maintenance_migration.c", []),
     ]
     for name, source, flags in targets:
         executable = directory / name

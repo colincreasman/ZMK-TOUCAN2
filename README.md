@@ -40,10 +40,13 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   **`M` selects macOS, `W` selects Windows**. The choice is remembered separately for USB and each Bluetooth
   profile across reboots: set it once per host, and switching profiles switches gesture sets automatically.
   Bluetooth clear has moved to `K`; profile-selection keys are unchanged.
+  If Studio saved the complete old J/K maintenance layout, firmware migrates those four maintenance
+  bindings to W/M/K after settings load. Other customized keys, pairing and per-host OS settings are kept.
   The left display shows the active host and OS, e.g. `BT0 MAC`, `BT1 WIN`, or `USB MAC`.
   In dongle mode the central mirrors this status to the left half over the existing split-behavior transport;
   mode/profile changes and peripheral battery discovery/notifications refresh it after reconnect.
   A disconnected peripheral shows `OS --` until fresh status arrives.
+  The mode label is above the chart, away from the clipped bottom edge of the canvas.
 
   Implemented by `zmk,behavior-os-select` ([src/behavior_os_select.c](src/behavior_os_select.c)), which wraps two
   bindings and picks between them when the gesture fires, and `zmk,behavior-os-mode`
