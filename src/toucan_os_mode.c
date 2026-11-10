@@ -10,23 +10,52 @@
 
 #include "toucan_os_mode.h"
 
-LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
-
-// TOUCAN_WIN_MODE in toucan.dtsi now only seeds the power-on default; a stored
-// setting, if any, overrides it at boot.
-#if IS_ENABLED(CONFIG_TOUCAN_OS_MODE_DEFAULT_WIN)
-static enum toucan_os_mode current_mode = TOUCAN_OS_WIN;
-#else
-static enum toucan_os_mode current_mode = TOUCAN_OS_MAC;
+#if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+#include <zmk/endpoints.h>
+#define TOUCAN_OS_MODE_PER_HOST 1
 #endif
 
-enum toucan_os_mode toucan_os_mode_get(void) { return current_mode; }
+LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
+
+// One mode per host: slot 0 is USB and slot 1 + n is Bluetooth profile n, so
+// pairing a Mac on one profile and a Windows PC on another switches gestures
+// automatically with the profile. The stored layout is fixed-size so it stays
+// valid if the profile count changes.
+#define TOUCAN_OS_MODE_SLOTS 16
+
+#if IS_ENABLED(CONFIG_TOUCAN_OS_MODE_DEFAULT_WIN)
+#define TOUCAN_OS_MODE_DEFAULT TOUCAN_OS_WIN
+#else
+#define TOUCAN_OS_MODE_DEFAULT TOUCAN_OS_MAC
+#endif
+
+static uint8_t modes[TOUCAN_OS_MODE_SLOTS] = {
+    [0 ...(TOUCAN_OS_MODE_SLOTS - 1)] = TOUCAN_OS_MODE_DEFAULT,
+};
+
+static int current_slot(void) {
+#ifdef TOUCAN_OS_MODE_PER_HOST
+    struct zmk_endpoint_instance endpoint = zmk_endpoints_selected();
+
+    if (endpoint.transport == ZMK_TRANSPORT_BLE && endpoint.ble.profile_index >= 0 &&
+        endpoint.ble.profile_index < TOUCAN_OS_MODE_SLOTS - 1) {
+        return 1 + endpoint.ble.profile_index;
+    }
+#endif
+    return 0;
+}
+
+enum toucan_os_mode toucan_os_mode_get(void) {
+    return modes[current_slot()] == TOUCAN_OS_WIN ? TOUCAN_OS_WIN : TOUCAN_OS_MAC;
+}
 
 #if IS_ENABLED(CONFIG_SETTINGS)
 
+static bool per_host_loaded;
+
 static void toucan_os_mode_save_work(struct k_work *work) {
     ARG_UNUSED(work);
-    settings_save_one("toucan/os_mode", &current_mode, sizeof(current_mode));
+    settings_save_one("toucan/os_modes", modes, sizeof(modes));
 }
 
 static struct k_work_delayable os_mode_save_work;
@@ -39,22 +68,35 @@ static void toucan_os_mode_save(void) {
 
 static int toucan_os_mode_handle_set(const char *name, size_t len, settings_read_cb read_cb,
                                      void *cb_arg) {
-    if (!settings_name_steq(name, "os_mode", NULL)) {
+    if (settings_name_steq(name, "os_modes", NULL)) {
+        if (len != sizeof(modes)) {
+            LOG_ERR("Invalid os_modes size (got %d, expected %d)", len, sizeof(modes));
+            return -EINVAL;
+        }
+
+        int err = read_cb(cb_arg, modes, sizeof(modes));
+        if (err <= 0) {
+            LOG_ERR("Failed to read os_modes from settings (err %d)", err);
+            return err;
+        }
+
+        per_host_loaded = true;
         return 0;
     }
 
-    if (len != sizeof(current_mode)) {
-        LOG_ERR("Invalid os_mode size (got %d, expected %d)", len, sizeof(current_mode));
-        return -EINVAL;
-    }
+    // The single mode stored by earlier firmware seeds every host until the
+    // per-host table has been saved once.
+    if (settings_name_steq(name, "os_mode", NULL) && !per_host_loaded) {
+        enum toucan_os_mode legacy;
 
-    int err = read_cb(cb_arg, &current_mode, sizeof(current_mode));
-    if (err <= 0) {
-        LOG_ERR("Failed to read os_mode from settings (err %d)", err);
-        return err;
-    }
+        if (len != sizeof(legacy) || read_cb(cb_arg, &legacy, sizeof(legacy)) <= 0) {
+            return 0;
+        }
 
-    LOG_INF("Restored OS mode %d", current_mode);
+        for (int i = 0; i < TOUCAN_OS_MODE_SLOTS; i++) {
+            modes[i] = legacy == TOUCAN_OS_WIN ? TOUCAN_OS_WIN : TOUCAN_OS_MAC;
+        }
+    }
 
     return 0;
 }
@@ -80,15 +122,17 @@ void toucan_os_mode_set(enum toucan_os_mode mode) {
         return;
     }
 
-    if (mode == current_mode) {
+    const int slot = current_slot();
+
+    if (modes[slot] == mode) {
         return;
     }
 
-    current_mode = mode;
-    LOG_INF("OS mode set to %s", mode == TOUCAN_OS_WIN ? "windows" : "mac");
+    modes[slot] = mode;
+    LOG_INF("OS mode for host slot %d set to %s", slot, mode == TOUCAN_OS_WIN ? "windows" : "mac");
     toucan_os_mode_save();
 }
 
 void toucan_os_mode_toggle(void) {
-    toucan_os_mode_set(current_mode == TOUCAN_OS_MAC ? TOUCAN_OS_WIN : TOUCAN_OS_MAC);
+    toucan_os_mode_set(toucan_os_mode_get() == TOUCAN_OS_MAC ? TOUCAN_OS_WIN : TOUCAN_OS_MAC);
 }
