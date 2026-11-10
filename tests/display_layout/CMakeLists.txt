@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.20)
+project(toucan_display_layout C)
+add_compile_definitions(LV_CONF_SKIP LV_COLOR_DEPTH=1 LV_USE_THEME_MONO=1 LV_USE_THEME_DEFAULT=0)
+file(GLOB_RECURSE lvgl_sources CONFIGURE_DEPENDS ${LVGL_SOURCE_DIR}/src/*.c)
+add_library(lvgl STATIC ${lvgl_sources})
+target_include_directories(lvgl PUBLIC ${LVGL_SOURCE_DIR})
+add_executable(display_layout main.c)
+target_link_libraries(display_layout PRIVATE lvgl m)

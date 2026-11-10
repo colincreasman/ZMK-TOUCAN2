@@ -41,6 +41,17 @@ struct toucan_os_status toucan_os_status_get(void) {
 
 static void status_sync_handler(struct k_work *work) {
     ARG_UNUSED(work);
+#if IS_ENABLED(CONFIG_ZMK_KEYMAP_SETTINGS_STORAGE)
+    static bool maintenance_checked;
+    if (!maintenance_checked && toucan_os_mode_settings_loaded()) {
+        extern int toucan_maintenance_migrate(void);
+        int migration_err = toucan_maintenance_migrate();
+        if (migration_err < 0) {
+            LOG_ERR("Saved maintenance key migration failed: %d", migration_err);
+        }
+        maintenance_checked = true;
+    }
+#endif
     const struct toucan_os_status status = toucan_os_status_get();
     const struct zmk_behavior_binding binding = {
         .behavior_dev = DEVICE_DT_NAME(DT_NODELABEL(os_status)),
