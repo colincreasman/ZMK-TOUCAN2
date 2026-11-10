@@ -16,6 +16,7 @@
 #include <zephyr/input/input.h>
 
 #include <drivers/input_processor.h>
+#include <dt-bindings/toucan/gestures.h>
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
@@ -290,6 +291,7 @@ static int tap_drag_handle_event(const struct device *dev, struct input_event *e
     case INPUT_BTN_EAST:
     case INPUT_BTN_SOUTH:
     case INPUT_BTN_WEST:
+    case TOUCAN_INPUT_BTN_THREE_FINGER:
         if (event->value) {
             tap_drag_abort(data);
         }

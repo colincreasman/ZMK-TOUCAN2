@@ -1,3 +1,10 @@
+target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/dts)
+zephyr_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+if(CONFIG_INPUT_TPS43)
+  include(cmake/tps43-contact.cmake)
+endif()
+
 target_sources_ifdef(CONFIG_ZMK_BEHAVIOR_LONG_PRESS app PRIVATE
     src/behavior_long_press.c
 )
@@ -32,6 +39,10 @@ target_sources_ifdef(CONFIG_ZMK_BEHAVIOR_OS_SELECT app PRIVATE
 
 target_sources_ifdef(CONFIG_ZMK_BEHAVIOR_OS_MODE app PRIVATE
     src/behavior_os_mode.c
+)
+
+target_sources_ifdef(CONFIG_ZMK_BEHAVIOR_OS_STATUS app PRIVATE
+    src/behavior_os_status.c
 )
 
 # Raises key events, which only the central half can send to a host.

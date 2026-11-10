@@ -13,8 +13,9 @@ description: |
 
   With the driver throttle turned down this processor sees a stream of direction
   samples instead. It suppresses them until one axis leads the other by `lead`
-  samples, emits exactly one press/release pair in the winning direction, then
-  stays silent until the fingers leave the pad.
+  samples, then emits one press/release pair in the winning direction.
+  Horizontal navigation rearms on a stable reversal or an idle gap of reset-ms,
+  so three fingers can stay down while navigating in either direction.
 
 compatible: "zmk,input-processor-swipe-arbiter"
 
@@ -41,5 +42,5 @@ properties:
     type: int
     default: 400
     description: >
-      Idle gap between swipe samples that ends the gesture, used as a fallback
-      if a touch-release event is ever missed.
+      Idle gap between swipe samples that rearms a new stroke without requiring
+      a finger lift. Also recovers if a touch-release event is missed.

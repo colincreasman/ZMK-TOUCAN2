@@ -23,10 +23,9 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   ESC combos). This 36-key Toucan2 omits the shield matrix's six outer-column switch positions, so those positions
   remain `&none`. Holding both far outer thumbs activates dedicated maintenance layer 3 without conflicting with
   the center Shift + L1 thumb chord: Bluetooth profiles stay in
-  their previous left-hand positions, Bluetooth clear moves one key inward to `W`, 2-second bootloader holds
+  their previous left-hand positions, Bluetooth clear is on `K`, 2-second bootloader holds
   live on the real top pinkies (`Q` for the left half and `P` for the right) with a third on `T` for the USB
-  dongle, and the right-hand home row carries
-  the macOS/Windows selector (`J`/`K`). `layer_four` remains the mouse-click
+  dongle, and `M`/`W` select macOS/Windows. `layer_four` remains the mouse-click
   layer because `is_touching_processor` in `toucan.dtsi` hardcodes `&mo 4` while the trackpad is touched.
 - **Sysdiagnose guard**: `.` on the base layer is `&hyper_guard DOT` instead of `&kp DOT`. It behaves exactly
   like `&kp`, except the key is dropped while Ctrl, Shift, Alt and GUI are all held. Resting four fingers on the
@@ -37,35 +36,52 @@ leaves the trackpad completely dead since the wrong driver is loaded).
 - **General configs**: [boards/shields/toucan/toucan_left.conf](boards/shields/toucan/toucan_left.conf) and [boards/shields/toucan/toucan_right.conf](boards/shields/toucan/toucan_right.conf)
 - **Host-OS mode**: the trackpad gestures send different shortcuts on macOS and Windows. Which set is used is a
   **runtime** setting, not a build option, because this keyboard moves between machines over its Bluetooth
-  profiles and reflashing to switch host would be impractical. On layer 3 the right-hand home row mirrors the
-  Bluetooth profile keys opposite it: **`J` selects macOS, `K` selects Windows**. The choice is remembered separately for
-  USB and for each Bluetooth profile, and persisted across reboots: select `K` once while connected to the Windows
-  profile and `J` once on the Mac profile, and switching profiles switches gesture sets automatically.
+  profiles and reflashing to switch host would be impractical. Hold both outer thumbs for layer 3:
+  **`M` selects macOS, `W` selects Windows**. The choice is remembered separately for USB and each Bluetooth
+  profile across reboots: set it once per host, and switching profiles switches gesture sets automatically.
+  Bluetooth clear has moved to `K`; profile-selection keys are unchanged.
+  The left display shows the active host and OS, e.g. `BT0 MAC`, `BT1 WIN`, or `USB MAC`.
+  In dongle mode the central mirrors this status to the left half over the existing split-behavior transport;
+  mode/profile changes and peripheral battery discovery/notifications refresh it after reconnect.
+  A disconnected peripheral shows `OS --` until fresh status arrives.
 
   Implemented by `zmk,behavior-os-select` ([src/behavior_os_select.c](src/behavior_os_select.c)), which wraps two
   bindings and picks between them when the gesture fires, and `zmk,behavior-os-mode`
   ([src/behavior_os_mode.c](src/behavior_os_mode.c)), which sets the mode (`0` = macOS, `1` = Windows, `2` =
-  toggle). The per-OS keycodes live on the `os_*` behaviors at the top of `toucan.dtsi`. The mode is resolved at
-  press and remembered for the matching release, so switching mid-press cannot strand a modifier. To change which
+  toggle). Two-finger navigation uses the `os_nav_*` bindings in `toucan.dtsi`; three-finger sequences use
+  `behavior_win_switcher.c` and capture the OS at three-finger touchdown. To change which
   mode hosts that were never set default to, set `CONFIG_TOUCAN_OS_MODE_DEFAULT_WIN=y` in the shield `.conf` files.
 
   | Gesture | macOS | Windows |
   |---|---|---|
   | 3-finger up | `Opt+\`` (Mission Control) | `Win+Tab` (Task View) |
   | 3-finger down | `Cmd+W` (close window/tab) | `Ctrl+W` (close tab) |
-  | 3-finger left | `Opt+Shift+Tab` (AltTab back) | `Alt+Shift+Tab` (switcher back) |
+  | 3-finger left | First left: `Opt+Tab`, then one `Shift+Tab`; later lefts: `Shift+Tab` | `Alt+Shift+Tab` (switcher back) |
   | 3-finger right | `Opt+Tab` (AltTab forward) | `Alt+Tab` (switcher forward) |
   | 2-finger left | `Cmd+[` (back) | `Alt+Left` |
   | 2-finger right | `Cmd+]` (forward) | `Alt+Right` |
 
-  Windows' `Alt+Tab` and the macOS [AltTab app](https://alt-tab-macos.netlify.app/) are *stateful* switchers,
-  so both OS modes' left/right swipes go through
-  `zmk,behavior-win-switcher` ([src/behavior_win_switcher.c](src/behavior_win_switcher.c)). The first swipe presses
-  and holds `Alt` (`Option` on Mac) and taps `Tab` (right) or `Shift+Tab` (left; a lone left swipe jumps to the
-  far end of the list); further swipes step the open switcher either way. `Alt`/`Option` is released
-  `session-ms` (1s) after the last swipe, committing the selection, or immediately when any key is pressed.
+  **Three-finger contact, not a timer, holds `Alt`/`Option`.** Touching with three fingers presses only that
+  modifier; it remains down while three fingers stay on the pad, even without movement. A right swipe taps
+  Tab. A Windows left swipe holds Shift for one Tab tap. A Mac left swipe opens
+  [AltTab](https://alt-tab-macos.netlify.app/) with Tab only if it has not already opened during this contact,
+  then sends one Shift+Tab. Subsequent left/right strokes send only Shift+Tab/Tab, keeping Option held.
+  A stable horizontal reversal rearms another stroke; a 400ms pause also rearms a same-direction stroke,
+  without lifting the fingers. Sustained movement does not flood the switcher with repeated Tab taps.
+  Lifting (or dropping below three fingers) releases the modifier and commits the selection.
+  Mac up taps grave while Option stays held. Windows up releases Alt before sending Win+Tab.
+  Down releases Alt/Option before sending Ctrl+W (Windows) or Cmd+W (Mac). Any accepted short key sequence
+  finishes before contact release, even if the fingers lift quickly. There is no 1s timeout.
   AltTab must be running on the Mac with `Option+Tab` / `Option+Shift+Tab` configured.
-- **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) maps standalone 3-finger swipes to the `os_*` behaviors above. On macOS, up sends `Option+\`` -- this Mac remaps Mission Control to `Opt+\`` under System Settings > Keyboard > Keyboard Shortcuts > Mission Control, so the `Ctrl+Up` default does nothing here. Left/right use the held switcher described above, replacing the former `Cmd+\`` / `Cmd+Shift+\`` shortcuts on Mac. Down sends `Cmd+W` on macOS and `Ctrl+W` on Windows. The driver emits horizontal and vertical events independently, so swipe reasonably straight to avoid firing two shortcuts at once; `three-finger-swipe-throttle-ms` (40ms) plus the swipe arbiter below keep one motion from repeating.
+- **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) sends 3-finger directions to `zmk,behavior-win-switcher` ([src/behavior_win_switcher.c](src/behavior_win_switcher.c)), which implements the contact-held sequences above. On macOS, up sends `Option+\`` -- this Mac remaps Mission Control to `Opt+\`` under System Settings > Keyboard > Keyboard Shortcuts > Mission Control, so the `Ctrl+Up` default does nothing here. The driver emits horizontal and vertical events independently; the 40ms throttle and swipe arbiter reject noisy diagonals and repeat samples.
+- **Three-finger contact reporting**: `config/west.yml` pins the previously used Azoteq driver revision.
+  [cmake/tps43-contact.cmake](cmake/tps43-contact.cmake) applies the small
+  [contact patch](patches/tps43-three-finger-contact.patch) when building the right half: the driver already
+  reads finger count, but now emits `BTN_TOOL_TRIPLETAP` (`0x14e`) when three-finger contact starts/ends,
+  before any direction samples. The event crosses the existing split link to the central half/dongle.
+  **Flash the right half AND the active central half/dongle for this change.** With an older right-half image,
+  contact-held gestures cannot start. One-/two-finger processing and the +41-degree rotation are unchanged.
+  Run `python3 tests/run_gesture_tests.py` for deterministic tests of the actual gesture behavior and arbiter.
 
 > **Gesture tuning is dialled in -- do not change these values casually.**
 > Hardware testing confirmed the 2- and 3-finger gestures now trigger reliably and never cross-fire: 3-finger up
@@ -114,8 +130,8 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   real direction for the rest of the window. That is why a clean up-swipe lands instantly while left/right is hard
   to trigger and hard to retry. With `three-finger-swipe-throttle-ms` turned down to 40 the arbiter sees a stream
   of samples, stays silent until one axis leads the other by `lead` samples, emits exactly one press/release pair
-  in the winning direction, then blocks until the fingers lift. An unambiguous swipe still produces exactly one
-  actuation, roughly 40ms later than before, and retries no longer wait out a 1200ms lockout.
+  in the winning direction. Horizontal navigation rearms after a stable reversal or 400ms idle gap, allowing
+  repeated left/right strokes without lifting. Up/down remain one-shot until the next contact.
 
   To revert to the raw driver behavior: drop `&swipe_arbiter` from the listener's `input-processors` and set
   `three-finger-swipe-throttle-ms` back to `1200`.
@@ -246,7 +262,7 @@ and newer Macs may ask to allow the new USB accessory.
 ## Day to day
 
 - **Everything lives on the dongle**: the keymap, combos, gesture processing and the macOS/Windows gesture mode
-  (layer 3 `J`/`K`), which is stored on the dongle and therefore travels with it between computers. The one
+  (layer 3 `M`/`W`), which is stored on the dongle and therefore travels with it between computers. The one
   exception is double-tap-and-hold drag, which runs on the right half.
 - **Updating firmware**: to update the dongle later without opening it, hold both far outer thumbs and hold `T`
   for 2 seconds. That is a third bootloader hold, retargeted at the central via the long-press behavior's

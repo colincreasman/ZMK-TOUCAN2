@@ -4,11 +4,12 @@
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/matrix_transform.h>
 #include <physical_layouts.dtsi>
+#include <dt-bindings/toucan/gestures.h>
 
 // Host-OS selection is now a runtime setting rather than a build-time define,
 // since this keyboard moves between a Mac and a Windows machine over its
-// Bluetooth profiles. Hold both far outer thumbs for layer 3 and press the
-// right-hand home row: `J` selects macOS, `K` selects Windows. The choice is
+// Bluetooth profiles. Hold both far outer thumbs for layer 3:
+// `M` selects macOS, `W` selects Windows. The choice is
 // remembered separately for USB and each Bluetooth profile, and persisted
 // across reboots, so each host only needs setting once.
 //
@@ -123,45 +124,16 @@
             #binding-cells = <1>;
         };
 
-        // Shared by Windows Alt+Tab and the macOS AltTab app. Holds
-        // Alt/Option across consecutive swipes so the switcher stays open:
-        // right taps Tab, left taps Shift+Tab. Alt is let go session-ms after
-        // the last swipe, or as soon as any key is pressed.
+        os_status: os_status {
+            compatible = "zmk,behavior-os-status";
+            #binding-cells = <2>;
+        };
+
+        // Three-finger contact holds Alt/Option; lifting releases it.
         win_switcher: win_switcher {
             compatible = "zmk,behavior-win-switcher";
             #binding-cells = <1>;
-            session-ms = <1000>;
-        };
-
-        // 3-finger up. macOS: Mission Control, remapped to Opt+` on this Mac.
-        // Windows: Task View.
-        os_swipe_up: os_swipe_up {
-            compatible = "zmk,behavior-os-select";
-            #binding-cells = <0>;
-            bindings = <&kp LA(GRAVE)>, <&kp LG(TAB)>;
-        };
-
-        // 3-finger down. macOS: Cmd+W. Windows: Ctrl+W.
-        os_swipe_down: os_swipe_down {
-            compatible = "zmk,behavior-os-select";
-            #binding-cells = <0>;
-            bindings = <&kp LG(W)>, <&kp LC(W)>;
-        };
-
-        // 3-finger swipe LEFT (driver reports it as EAST, see below).
-        // Previous window: Option+Shift+Tab on macOS, Alt+Shift+Tab on Windows.
-        os_swipe_left: os_swipe_left {
-            compatible = "zmk,behavior-os-select";
-            #binding-cells = <0>;
-            bindings = <&win_switcher 1>, <&win_switcher 1>;
-        };
-
-        // 3-finger swipe RIGHT (driver reports it as WEST).
-        // Next window: Option+Tab on macOS, Alt+Tab on Windows.
-        os_swipe_right: os_swipe_right {
-            compatible = "zmk,behavior-os-select";
-            #binding-cells = <0>;
-            bindings = <&win_switcher 0>, <&win_switcher 0>;
+            tap-ms = <12>;
         };
 
         // 2-finger horizontal swipe, page navigation.
@@ -263,9 +235,8 @@
         // toucan_right.overlay so this node sees a stream of samples rather
         // than a single noisy one. It stays silent until one axis leads the
         // other by `lead` samples, emits exactly one press/release pair in the
-        // winning direction, then blocks until the fingers lift. Net effect for
-        // an unambiguous swipe is one actuation, same as before, about 40ms
-        // later; retries no longer have to wait out a 1200ms lockout.
+        // winning direction. Horizontal strokes rearm on a stable reversal or
+        // reset-ms idle gap, so navigation can continue without lifting.
         //
         // To restore the old raw behavior: drop &swipe_arbiter from the
         // pipeline below and set the throttle back to 1200.
@@ -327,6 +298,13 @@
             bindings  = <&mo 4>;            // Activate Layer 4 while held &mo 4
         };
 
+        three_finger_contact: three_finger_contact {
+            compatible = "zmk,input-processor-behaviors";
+            #input-processor-cells = <0>;
+            codes = <TOUCAN_INPUT_BTN_THREE_FINGER>;
+            bindings = <&win_switcher TOUCAN_GESTURE_CONTACT>;
+        };
+
         // 3-finger swipe shortcuts. These come from the driver's
         // `three-finger-swipe` path (enabled in toucan_right.overlay);
         // `swipes` stays off there, so ordinary 1-finger cursor flicks can
@@ -335,13 +313,11 @@
         //   - Up -> Mission Control on macOS (remapped to Opt+` on this Mac,
         //     NOT the Ctrl+Up default, so Ctrl+Up did nothing at all here) and
         //     Task View on Windows.
-        //   - Left/right -> window cycling through win_switcher: macOS AltTab
-        //     uses Option+Tab / Option+Shift+Tab; Windows uses Alt+Tab /
-        //     Alt+Shift+Tab. Alt/Option stays held across consecutive swipes.
+        //   - Right -> Tab while Alt/Option is held by three-finger contact.
+        //   - Left -> Shift+Tab; Mac first opens AltTab with Tab if needed.
         //   - Down -> Cmd+W on macOS, Ctrl+W on Windows.
         //
-        // The actual per-OS keycodes live on the os_* behaviors at the top of
-        // this file.
+        // The OS-specific sequences live in behavior_win_switcher.c.
         //
         // The driver reports each nonzero axis independently, so a strongly
         // diagonal swipe can emit a vertical *and* a horizontal shortcut in the
@@ -358,7 +334,10 @@
             compatible = "zmk,input-processor-behaviors";
             #input-processor-cells = <0>;
             codes = <INPUT_BTN_NORTH INPUT_BTN_EAST INPUT_BTN_SOUTH INPUT_BTN_WEST>;
-            bindings = <&os_swipe_up>, <&os_swipe_left>, <&os_swipe_down>, <&os_swipe_right>;
+            bindings = <&win_switcher TOUCAN_GESTURE_UP>,
+                       <&win_switcher TOUCAN_GESTURE_LEFT>,
+                       <&win_switcher TOUCAN_GESTURE_DOWN>,
+                       <&win_switcher TOUCAN_GESTURE_RIGHT>;
         };
     };
 
@@ -393,10 +372,11 @@
         // toucan_right.overlay, `zoom;` removed), so it would never fire
         // anyway. Left in the tree (unreferenced) rather than deleted, in
         // case zoom is ever re-enabled.
-        input-processors = <&pointer_accel>, <&swipe_arbiter>, <&hscroll_shortcut>, <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 100>, <&is_touching_processor>, <&swipe_button_mapper>;
+        input-processors = <&pointer_accel>, <&swipe_arbiter>, <&three_finger_contact>, <&hscroll_shortcut>, <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 100>, <&is_touching_processor>, <&swipe_button_mapper>;
         scroller {
             layers = <1 2>;
             input-processors = <
+                &three_finger_contact
                 &zip_xy_to_scroll_mapper
                 &zip_scroll_scaler 1 100
                 &zip_scroll_transform INPUT_TRANSFORM_X_INVERT

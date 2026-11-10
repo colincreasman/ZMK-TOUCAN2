@@ -10,51 +10,72 @@
 #include <zephyr/logging/log.h>
 
 #include <drivers/behavior.h>
+#include <dt-bindings/toucan/gestures.h>
 #include <dt-bindings/zmk/keys.h>
 #include <zmk/behavior.h>
-#include <zmk/event_manager.h>
 #include <zmk/events/keycode_state_changed.h>
-#include <zmk/events/position_state_changed.h>
+
+#include "toucan_os_mode.h"
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
 
-#define SWITCHER_NEXT 0
-#define SWITCHER_PREV 1
-
-// Windows' Alt+Tab and macOS's AltTab app only stay open while Alt/Option is held, and
-// Alt+Shift+Tab on its own does nothing useful. So Alt is held for a short
-// session: each swipe taps Tab or Shift+Tab inside it, and Alt is let go once
-// the swipes stop, which switches to the selected window.
-#define STEP_GAP_MS 12
-#define MAX_STEPS 16
+#define MAX_STEPS 64
 
 struct step {
     uint32_t keycode;
     bool pressed;
 };
 
-static const struct device *switcher_dev;
-static struct k_work_delayable step_work;
-static struct k_spinlock lock;
+static void step_work_handler(struct k_work *work);
+static K_WORK_DELAYABLE_DEFINE(step_work, step_work_handler);
+static K_MUTEX_DEFINE(switcher_lock);
 static struct step steps[MAX_STEPS];
 static uint8_t step_head;
 static uint8_t step_count;
-// Keys this behavior currently holds on the host.
+static int64_t next_step_at;
+static bool contact_active;
+static bool terminal_action;
+static bool switcher_open;
+static bool mac_mode;
+static bool alt_queued;
 static bool alt_held;
 static bool shift_held;
 static bool tab_held;
-// Taps are queued or Alt is waiting out the session.
-static bool session_active;
-static int64_t session_deadline;
-static uint32_t session_ms;
+static bool gui_held;
+static bool ctrl_held;
+static bool w_held;
+static bool grave_held;
+
+static void send_key(uint32_t keycode, bool pressed) {
+    switch (keycode) {
+    case LALT:
+        alt_held = pressed;
+        break;
+    case LSHIFT:
+        shift_held = pressed;
+        break;
+    case TAB:
+        tab_held = pressed;
+        break;
+    case LGUI:
+        gui_held = pressed;
+        break;
+    case LCTRL:
+        ctrl_held = pressed;
+        break;
+    case W:
+        w_held = pressed;
+        break;
+    case GRAVE:
+        grave_held = pressed;
+        break;
+    }
+    raise_zmk_keycode_state_changed_from_encoded(keycode, pressed, k_uptime_get());
+}
 
 static void queue_step(uint32_t keycode, bool pressed) {
-    if (step_count == MAX_STEPS) {
-        LOG_WRN("win-switcher step queue full");
-        return;
-    }
     steps[(step_head + step_count) % MAX_STEPS] = (struct step){keycode, pressed};
     step_count++;
 }
@@ -64,160 +85,156 @@ static void queue_tap(uint32_t keycode) {
     queue_step(keycode, false);
 }
 
-static void track_held(uint32_t keycode, bool pressed) {
-    if (keycode == LALT) {
-        alt_held = pressed;
-    } else if (keycode == LSHIFT) {
-        shift_held = pressed;
-    } else if (keycode == TAB) {
-        tab_held = pressed;
-    }
+static void start_steps(void) {
+    const int64_t delay = MAX(0, next_step_at - k_uptime_get());
+    k_work_reschedule(&step_work, K_MSEC(delay));
 }
 
-static void raise_key(uint32_t keycode, bool pressed) {
-    raise_zmk_keycode_state_changed_from_encoded(keycode, pressed, k_uptime_get());
+// Callers reserve a whole action before queuing any of it. On overflow, fail
+// visibly and release everything this behavior owns rather than strand a key.
+static bool reserve_steps(uint8_t count) {
+    if (step_count + count <= MAX_STEPS) {
+        return true;
+    }
+    LOG_ERR("three-finger gesture queue full; cancelling contact");
+    k_work_cancel_delayable(&step_work);
+    step_count = 0;
+    contact_active = false;
+    alt_queued = false;
+    if (tab_held) {
+        send_key(TAB, false);
+    }
+    if (w_held) {
+        send_key(W, false);
+    }
+    if (grave_held) {
+        send_key(GRAVE, false);
+    }
+    if (shift_held) {
+        send_key(LSHIFT, false);
+    }
+    if (gui_held) {
+        send_key(LGUI, false);
+    }
+    if (ctrl_held) {
+        send_key(LCTRL, false);
+    }
+    if (alt_held) {
+        send_key(LALT, false);
+    }
+    return false;
 }
 
 static void step_work_handler(struct k_work *work) {
     ARG_UNUSED(work);
-
-    k_spinlock_key_t key = k_spin_lock(&lock);
-
+    k_mutex_lock(&switcher_lock, K_FOREVER);
     if (step_count > 0) {
         struct step s = steps[step_head];
         step_head = (step_head + 1) % MAX_STEPS;
         step_count--;
-        track_held(s.keycode, s.pressed);
-        k_spin_unlock(&lock, key);
-
-        raise_key(s.keycode, s.pressed);
-
-        // Decided after the key is sent, under the lock, so a swipe queued
-        // meanwhile is not pushed back by the session timeout.
-        key = k_spin_lock(&lock);
-        session_deadline = k_uptime_get() + session_ms;
-        k_work_reschedule(&step_work, K_MSEC(step_count > 0 ? STEP_GAP_MS : session_ms));
-        k_spin_unlock(&lock, key);
-        return;
+        send_key(s.keycode, s.pressed);
+        next_step_at = k_uptime_get() + DT_INST_PROP(0, tap_ms);
+        if (step_count > 0) {
+            k_work_reschedule(&step_work, K_MSEC(DT_INST_PROP(0, tap_ms)));
+        }
     }
-
-    const int64_t remaining = session_deadline - k_uptime_get();
-    if (remaining > 0) {
-        k_work_reschedule(&step_work, K_MSEC(remaining));
-        k_spin_unlock(&lock, key);
-        return;
-    }
-
-    const bool release_alt = alt_held;
-    alt_held = false;
-    session_active = false;
-    k_spin_unlock(&lock, key);
-
-    if (release_alt) {
-        raise_key(LALT, false);
-    }
+    k_mutex_unlock(&switcher_lock);
 }
 
 static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
-                                     struct zmk_behavior_binding_event event) {
+                                    struct zmk_behavior_binding_event event) {
     ARG_UNUSED(event);
-
-    k_spinlock_key_t key = k_spin_lock(&lock);
-
-    // A swipe arriving while earlier taps are still queued joins the open
-    // session rather than opening a second one.
-    const bool session_open = session_active;
-    const bool queue_idle = step_count == 0;
-
-    if (!session_open) {
-        queue_step(LALT, true);
-        queue_tap(TAB);
+    if (binding->param1 > TOUCAN_GESTURE_CONTACT) {
+        LOG_ERR("Invalid three-finger gesture %u", binding->param1);
+        return -EINVAL;
     }
 
-    if (binding->param1 == SWITCHER_PREV) {
-        queue_step(LSHIFT, true);
-        queue_tap(TAB);
-        if (!session_open) {
-            // Alt+Tab selects the next window, and one Shift+Tab would only
-            // step back to the current one, so wrap to the far end instead.
-            queue_tap(TAB);
+    k_mutex_lock(&switcher_lock, K_FOREVER);
+    const bool idle = step_count == 0;
+    if (binding->param1 == TOUCAN_GESTURE_CONTACT) {
+        if (!contact_active) {
+            if (!reserve_steps(1)) {
+                k_mutex_unlock(&switcher_lock);
+                return -ENOSPC;
+            }
+            contact_active = true;
+            terminal_action = false;
+            switcher_open = false;
+            mac_mode = toucan_os_mode_get() == TOUCAN_OS_MAC;
+            alt_queued = true;
+            queue_step(LALT, true);
         }
-        queue_step(LSHIFT, false);
-    } else if (session_open) {
-        queue_tap(TAB);
+    } else if (contact_active && !terminal_action) {
+        // The longest action is the first Mac left: Tab, then Shift+Tab.
+        if (!reserve_steps(6)) {
+            k_mutex_unlock(&switcher_lock);
+            return -ENOSPC;
+        }
+        switch (binding->param1) {
+        case TOUCAN_GESTURE_RIGHT:
+            queue_tap(TAB);
+            switcher_open = true;
+            break;
+        case TOUCAN_GESTURE_LEFT:
+            if (mac_mode && !switcher_open) {
+                queue_tap(TAB);
+            }
+            queue_step(LSHIFT, true);
+            queue_tap(TAB);
+            queue_step(LSHIFT, false);
+            switcher_open = true;
+            break;
+        case TOUCAN_GESTURE_UP:
+            terminal_action = true;
+            if (mac_mode) {
+                queue_tap(GRAVE);
+            } else {
+                queue_step(LALT, false);
+                alt_queued = false;
+                queue_step(LGUI, true);
+                queue_tap(TAB);
+                queue_step(LGUI, false);
+            }
+            break;
+        case TOUCAN_GESTURE_DOWN:
+            terminal_action = true;
+            queue_step(LALT, false);
+            alt_queued = false;
+            const uint32_t mod = mac_mode ? LGUI : LCTRL;
+            queue_step(mod, true);
+            queue_tap(W);
+            queue_step(mod, false);
+            break;
+        }
     }
-
-    session_active = true;
-    if (queue_idle) {
-        k_work_reschedule(&step_work, K_NO_WAIT);
+    if (idle && step_count > 0) {
+        start_steps();
     }
-    k_spin_unlock(&lock, key);
+    k_mutex_unlock(&switcher_lock);
     return ZMK_BEHAVIOR_OPAQUE;
 }
 
 static int on_keymap_binding_released(struct zmk_behavior_binding *binding,
-                                      struct zmk_behavior_binding_event event) {
-    ARG_UNUSED(binding);
+                                     struct zmk_behavior_binding_event event) {
     ARG_UNUSED(event);
+    if (binding->param1 != TOUCAN_GESTURE_CONTACT) {
+        return ZMK_BEHAVIOR_OPAQUE;
+    }
+
+    k_mutex_lock(&switcher_lock, K_FOREVER);
+    contact_active = false;
+    // Finish an already accepted swipe even if the fingers lift during its
+    // short key sequence, then release Alt. No timer keeps it held after that.
+    if (alt_queued && reserve_steps(1)) {
+        const bool idle = step_count == 0;
+        queue_step(LALT, false);
+        alt_queued = false;
+        if (idle) {
+            start_steps();
+        }
+    }
+    k_mutex_unlock(&switcher_lock);
     return ZMK_BEHAVIOR_OPAQUE;
-}
-
-// Pressing any key ends the session first, so typing straight after a swipe
-// is never sent with Alt held.
-static int win_switcher_position_listener(const zmk_event_t *eh) {
-    const struct zmk_position_state_changed *ev = as_zmk_position_state_changed(eh);
-
-    if (ev == NULL || !ev->state) {
-        return ZMK_EV_EVENT_BUBBLE;
-    }
-
-    k_spinlock_key_t key = k_spin_lock(&lock);
-    const bool active = session_active;
-    k_spin_unlock(&lock, key);
-
-    if (!active) {
-        return ZMK_EV_EVENT_BUBBLE;
-    }
-
-    // Wait out a step that is mid-flight, so nothing is pressed after the
-    // cleanup below.
-    struct k_work_sync sync;
-    k_work_cancel_delayable_sync(&step_work, &sync);
-
-    key = k_spin_lock(&lock);
-
-    const bool release_tab = tab_held;
-    const bool release_shift = shift_held;
-    const bool release_alt = alt_held;
-    step_count = 0;
-    tab_held = false;
-    shift_held = false;
-    alt_held = false;
-    session_active = false;
-    k_spin_unlock(&lock, key);
-
-    if (release_tab) {
-        raise_key(TAB, false);
-    }
-    if (release_shift) {
-        raise_key(LSHIFT, false);
-    }
-    if (release_alt) {
-        raise_key(LALT, false);
-    }
-    return ZMK_EV_EVENT_BUBBLE;
-}
-
-ZMK_LISTENER(behavior_win_switcher, win_switcher_position_listener);
-ZMK_SUBSCRIPTION(behavior_win_switcher, zmk_position_state_changed);
-
-static int behavior_win_switcher_init(const struct device *dev) {
-    if (switcher_dev == NULL) {
-        switcher_dev = dev;
-        session_ms = DT_INST_PROP(0, session_ms);
-        k_work_init_delayable(&step_work, step_work_handler);
-    }
-    return 0;
 }
 
 static const struct behavior_driver_api behavior_win_switcher_driver_api = {
@@ -226,9 +243,9 @@ static const struct behavior_driver_api behavior_win_switcher_driver_api = {
 };
 
 #define WIN_SWITCHER_INST(n)                                                                       \
-    BEHAVIOR_DT_INST_DEFINE(n, behavior_win_switcher_init, NULL, NULL, NULL, POST_KERNEL,          \
-                            CONFIG_KERNEL_INIT_PRIORITY_DEFAULT,                                   \
-                            &behavior_win_switcher_driver_api);
+    BEHAVIOR_DT_INST_DEFINE(n, NULL, NULL, NULL, NULL, POST_KERNEL,                                  \
+                           CONFIG_KERNEL_INIT_PRIORITY_DEFAULT,                                   \
+                           &behavior_win_switcher_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(WIN_SWITCHER_INST)
 

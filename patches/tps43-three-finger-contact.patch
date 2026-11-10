@@ -1,0 +1,28 @@
+diff --git a/drivers/input/tps43.c b/drivers/input/tps43.c
+--- a/drivers/input/tps43.c
++++ b/drivers/input/tps43.c
+@@ -425,6 +425,13 @@ static void tps43_work_handler(struct k_work *work) {
+     int16_t rel_x = (int16_t)((touch_data[5] << 8) | touch_data[6]);
+     int16_t rel_y = (int16_t)((touch_data[7] << 8) | touch_data[8]);
+ 
++    // BTN_TOOL_TRIPLETAP: report contact before any direction samples.
++    bool three_finger_touching = config->three_finger_swipe && num_fingers == 3;
++    if (three_finger_touching != drv_data->three_finger_touching) {
++        drv_data->three_finger_touching = three_finger_touching;
++        input_report_key(dev, 0x14e, three_finger_touching, true, K_FOREVER);
++    }
++
+     bool is_touching = (num_fingers > 0);
+     if (is_touching != drv_data->touching) {
+         drv_data->touching = is_touching;
+diff --git a/drivers/input/tps43.h b/drivers/input/tps43.h
+--- a/drivers/input/tps43.h
++++ b/drivers/input/tps43.h
+@@ -271,6 +271,7 @@ struct tps43_drv_data {
+     bool drag_active;
+     bool suspended;
+     bool touching;
++    bool three_finger_touching;
+     int64_t last_three_finger_swipe_ms;
+ };
+ 
