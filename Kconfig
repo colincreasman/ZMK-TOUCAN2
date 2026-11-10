@@ -72,6 +72,15 @@ config ZMK_BEHAVIOR_OS_MODE
     help
       Select or toggle the host-OS mode used by the OS-select behavior.
 
+DT_COMPAT_ZMK_BEHAVIOR_WIN_SWITCHER := zmk,behavior-win-switcher
+
+config ZMK_BEHAVIOR_WIN_SWITCHER
+    bool "Alt+Tab switcher behavior"
+    default $(dt_compat_enabled,$(DT_COMPAT_ZMK_BEHAVIOR_WIN_SWITCHER))
+    help
+      Step through Windows Alt+Tab or the macOS AltTab app from discrete
+      gestures, holding Alt/Option across consecutive actuations.
+
 config TOUCAN_OS_MODE
     bool
     help

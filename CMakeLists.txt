@@ -33,3 +33,10 @@ target_sources_ifdef(CONFIG_ZMK_BEHAVIOR_OS_SELECT app PRIVATE
 target_sources_ifdef(CONFIG_ZMK_BEHAVIOR_OS_MODE app PRIVATE
     src/behavior_os_mode.c
 )
+
+# Raises key events, which only the central half can send to a host.
+if ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+  target_sources_ifdef(CONFIG_ZMK_BEHAVIOR_WIN_SWITCHER app PRIVATE
+      src/behavior_win_switcher.c
+  )
+endif()
