@@ -32,15 +32,16 @@ leaves the trackpad completely dead since the wrong driver is loaded).
 - **Host-OS mode**: the trackpad gestures send different shortcuts on macOS and Windows. Which set is used is a
   **runtime** setting, not a build option, because this keyboard moves between machines over its Bluetooth
   profiles and reflashing to switch host would be impractical. On layer 3 the right-hand home row mirrors the
-  Bluetooth profile keys opposite it: **`J` selects macOS, `K` selects Windows**. The choice is persisted, so the
-  board comes back up in whichever mode it was last left in.
+  Bluetooth profile keys opposite it: **`J` selects macOS, `K` selects Windows**. The choice is remembered separately for
+  USB and for each Bluetooth profile, and persisted across reboots: select `K` once while connected to the Windows
+  profile and `J` once on the Mac profile, and switching profiles switches gesture sets automatically.
 
   Implemented by `zmk,behavior-os-select` ([src/behavior_os_select.c](src/behavior_os_select.c)), which wraps two
   bindings and picks between them when the gesture fires, and `zmk,behavior-os-mode`
   ([src/behavior_os_mode.c](src/behavior_os_mode.c)), which sets the mode (`0` = macOS, `1` = Windows, `2` =
   toggle). The per-OS keycodes live on the `os_*` behaviors at the top of `toucan.dtsi`. The mode is resolved at
   press and remembered for the matching release, so switching mid-press cannot strand a modifier. To change which
-  mode a freshly-reset board powers up in, set `CONFIG_TOUCAN_OS_MODE_DEFAULT_WIN=y` in the shield `.conf` files.
+  mode hosts that were never set default to, set `CONFIG_TOUCAN_OS_MODE_DEFAULT_WIN=y` in the shield `.conf` files.
 
   | Gesture | macOS | Windows |
   |---|---|---|

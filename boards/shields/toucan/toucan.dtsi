@@ -9,7 +9,8 @@
 // since this keyboard moves between a Mac and a Windows machine over its
 // Bluetooth profiles. Hold both far outer thumbs for layer 3 and press the
 // right-hand home row: `J` selects macOS, `K` selects Windows. The choice is
-// persisted across reboots.
+// remembered separately for USB and each Bluetooth profile, and persisted
+// across reboots, so each host only needs setting once.
 //
 // To change which mode a freshly-reset board powers up in, set
 // CONFIG_TOUCAN_OS_MODE_DEFAULT_WIN=y in the shield .conf files.
@@ -105,14 +106,15 @@
 / {
     // OS-aware gesture shortcuts. Each of these picks between a macOS binding
     // (first) and a Windows binding (second) at the moment it fires, based on
-    // the runtime mode set by `&os_mode` on layer 3. macOS behavior is
+    // the runtime mode `&os_mode` set for the active host (USB or BT profile)
+    // on layer 3. macOS behavior is
     // unchanged from the tuned-and-tested setup; only the Windows column is
     // new.
     //
     // A runtime switch rather than the old compile-time TOUCAN_WIN_MODE define,
     // because this keyboard moves between machines over its Bluetooth profiles
     // and reflashing to change host would be impractical. The define now only
-    // seeds the power-on default (see CONFIG_TOUCAN_OS_MODE_DEFAULT_WIN).
+    // seeds the default for hosts never set (see CONFIG_TOUCAN_OS_MODE_DEFAULT_WIN).
     behaviors {
         // Selects the host OS used by the trackpad gesture shortcuts.
         // Parameter: 0 = macOS, 1 = Windows, 2 = toggle. Bound on layer 3.

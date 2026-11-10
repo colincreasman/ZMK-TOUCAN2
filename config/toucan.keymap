@@ -238,8 +238,8 @@
         //
         // The two home-row keys mirror the Bluetooth profiles opposite them and
         // pick which host OS the trackpad gestures target: `J` selects macOS,
-        // `K` selects Windows. The choice persists across reboots, so it only
-        // needs setting when moving the keyboard to a different machine.
+        // `K` selects Windows. The choice is remembered per host (USB and each
+        // BT profile) across reboots, so each machine only needs setting once.
         //
         // `T` is a third 2s bootloader hold, for the USB dongle in dongle mode
         // (the left half when standalone). It sits on the inner column, between
