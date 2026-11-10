@@ -44,6 +44,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #include "screen.h"
 #include "sleep.h"
+#include "os_status.h"
 
 struct connection_status_state {
     bool connected;
@@ -73,7 +74,25 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
     draw_profile_status(canvas, state);
     draw_battery_status(canvas, state);
     draw_battery_peripheral_status(canvas, state);
+    draw_os_status(canvas, state);
 }
+
+static void os_status_update_cb(struct toucan_os_status state) {
+    struct zmk_widget_screen *widget;
+    SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
+        widget->state.os_status = state;
+        draw_top(widget->obj, widget->cbuf, &widget->state);
+    }
+}
+
+static struct toucan_os_status os_status_get_state(const zmk_event_t *eh) {
+    ARG_UNUSED(eh);
+    return toucan_os_status_get();
+}
+
+ZMK_DISPLAY_WIDGET_LISTENER(widget_os_status, struct toucan_os_status,
+                           os_status_update_cb, os_status_get_state)
+ZMK_SUBSCRIPTION(widget_os_status, toucan_os_status_changed);
 
 /**
  * Battery status
@@ -300,6 +319,7 @@ int zmk_widget_screen_init(struct zmk_widget_screen *widget, lv_obj_t *parent) {
     widget_battery_peripheral_status_init();
     widget_layer_status_init();
     widget_output_status_init();
+    widget_os_status_init();
 
     #if defined(CONFIG_TOUCAN_STATUS_SCREEN) && CONFIG_TOUCAN_STATUS_SCREEN == 2
     widget_chart_status_init();

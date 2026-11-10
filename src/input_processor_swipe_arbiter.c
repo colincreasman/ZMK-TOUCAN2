@@ -15,6 +15,7 @@
 #include <zephyr/input/input.h>
 
 #include <drivers/input_processor.h>
+#include <dt-bindings/toucan/gestures.h>
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
@@ -41,6 +42,7 @@ struct arbiter_data {
     bool decided;
     bool emitted;
     bool await_release;
+    uint8_t reverse_samples;
 };
 
 static int swipe_dir_of(uint16_t code) {
@@ -66,6 +68,7 @@ static void arbiter_reset(struct arbiter_data *data) {
     data->decided = false;
     data->emitted = false;
     data->await_release = false;
+    data->reverse_samples = 0;
 }
 
 static int arbiter_handle_event(const struct device *dev, struct input_event *event,
@@ -85,8 +88,8 @@ static int arbiter_handle_event(const struct device *dev, struct input_event *ev
     // A gesture ends when the fingers leave the pad, so the next swipe starts
     // from a clean slate. This node must run before any behaviors processor
     // bound to INPUT_BTN_TOUCH, which would otherwise consume the event first.
-    if (event->code == INPUT_BTN_TOUCH) {
-        if (event->value == 0) {
+    if (event->code == INPUT_BTN_TOUCH || event->code == TOUCAN_INPUT_BTN_THREE_FINGER) {
+        if (event->value == 0 || event->code == TOUCAN_INPUT_BTN_THREE_FINGER) {
             arbiter_reset(data);
         }
         return ZMK_INPUT_PROC_CONTINUE;
@@ -113,7 +116,21 @@ static int arbiter_handle_event(const struct device *dev, struct input_event *ev
     }
 
     if (data->emitted) {
-        return ZMK_INPUT_PROC_STOP;
+        // A held three-finger contact may change direction without lifting.
+        // Require a stable horizontal reversal, not a stray diagonal sample.
+        const bool horizontal = data->chosen_code == INPUT_BTN_EAST ||
+                                data->chosen_code == INPUT_BTN_WEST;
+        const bool opposite = (data->chosen_code == INPUT_BTN_EAST && event->code == INPUT_BTN_WEST) ||
+                              (data->chosen_code == INPUT_BTN_WEST && event->code == INPUT_BTN_EAST);
+        if (!horizontal || !opposite) {
+            data->reverse_samples = 0;
+            return ZMK_INPUT_PROC_STOP;
+        }
+        if (++data->reverse_samples < MAX(1, cfg->lead)) {
+            return ZMK_INPUT_PROC_STOP;
+        }
+        arbiter_reset(data);
+        data->counts[dir] = MAX(1, cfg->lead) - 1;
     }
 
     data->counts[dir]++;

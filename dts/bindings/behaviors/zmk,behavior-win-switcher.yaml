@@ -2,21 +2,21 @@
 # SPDX-License-Identifier: MIT
 
 description: |
-  Steps through Windows' Alt+Tab or the macOS AltTab app from discrete gestures.
-
-  Parameter 0 moves to the next window and 1 to the previous one. Alt/Option is held
-  across consecutive actuations so the switcher stays open, then released
-  once they stop, which switches to the selected window. Pressing any key
-  releases Alt at once.
+  Three-finger contact holds Alt/Option until the contact ends.
+  Parameter 0 = right, 1 = left, 2 = up, 3 = down, 4 = contact.
+  Left/right presses navigate repeatedly during contact; direction releases
+  do nothing. The first Mac left primes the switcher with Tab before Shift+Tab.
+  Up/down end navigation until the next contact.
+  Contact press/release starts/ends the session. The OS is captured on contact.
 
 compatible: "zmk,behavior-win-switcher"
 
 include: one_param.yaml
 
 properties:
-  session-ms:
+  tap-ms:
     type: int
-    default: 1000
+    default: 12
     description: >
-      How long Alt stays held after the last actuation. Raise it if the
-      switcher closes before the next swipe lands; lower it to switch sooner.
+      Gap between key reports in a swipe sequence, allowing the host to see
+      distinct taps. This is not a contact-release timeout.

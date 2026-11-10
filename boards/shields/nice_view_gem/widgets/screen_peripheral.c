@@ -37,6 +37,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #include "../assets/custom_fonts.h"
 #include "screen.h"
+#include "os_status.h"
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -57,7 +58,25 @@ static void draw_screen(lv_obj_t *widget, const struct status_state *state) {
 
     draw_battery_status(canvas, state);
     draw_link_status(canvas, state);
+    draw_os_status(canvas, state);
 }
+
+static void os_status_update_cb(struct toucan_os_status state) {
+    struct zmk_widget_screen *widget;
+    SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
+        widget->state.os_status = state;
+        draw_screen(widget->obj, &widget->state);
+    }
+}
+
+static struct toucan_os_status os_status_get_state(const zmk_event_t *eh) {
+    ARG_UNUSED(eh);
+    return toucan_os_status_get();
+}
+
+ZMK_DISPLAY_WIDGET_LISTENER(widget_os_status, struct toucan_os_status,
+                           os_status_update_cb, os_status_get_state)
+ZMK_SUBSCRIPTION(widget_os_status, toucan_os_status_changed);
 
 /**
  * Battery status
@@ -140,6 +159,7 @@ int zmk_widget_screen_init(struct zmk_widget_screen *widget, lv_obj_t *parent) {
     sys_slist_append(&widgets, &widget->node);
     widget_peripheral_battery_init();
     widget_peripheral_link_init();
+    widget_os_status_init();
 
     return 0;
 }

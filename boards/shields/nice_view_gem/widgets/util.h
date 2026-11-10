@@ -2,6 +2,7 @@
 
 #include <lvgl.h>
 #include <zmk/endpoints.h>
+#include "toucan_os_status.h"
 
 #define SCREEN_WIDTH 144
 #define SCREEN_HEIGHT 168
@@ -14,6 +15,7 @@
 #define LVGL_FOREGROUND lv_color_white()
 
 struct status_state {
+    struct toucan_os_status os_status;
     uint8_t battery;
     uint8_t battery_p;
     bool charging;

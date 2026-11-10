@@ -57,6 +57,14 @@ config ZMK_INPUT_PROCESSOR_TAP_DRAG
 
 DT_COMPAT_ZMK_BEHAVIOR_OS_SELECT := zmk,behavior-os-select
 DT_COMPAT_ZMK_BEHAVIOR_OS_MODE := zmk,behavior-os-mode
+DT_COMPAT_ZMK_BEHAVIOR_OS_STATUS := zmk,behavior-os-status
+
+config ZMK_BEHAVIOR_OS_STATUS
+    bool "Host OS display status"
+    default $(dt_compat_enabled,$(DT_COMPAT_ZMK_BEHAVIOR_OS_STATUS))
+    select TOUCAN_OS_MODE
+    help
+      Mirror the active host slot and its OS mode to split-peripheral displays.
 
 config ZMK_BEHAVIOR_OS_SELECT
     bool "OS-select behavior"
@@ -77,9 +85,10 @@ DT_COMPAT_ZMK_BEHAVIOR_WIN_SWITCHER := zmk,behavior-win-switcher
 config ZMK_BEHAVIOR_WIN_SWITCHER
     bool "Alt+Tab switcher behavior"
     default $(dt_compat_enabled,$(DT_COMPAT_ZMK_BEHAVIOR_WIN_SWITCHER))
+    select TOUCAN_OS_MODE
     help
-      Step through Windows Alt+Tab or the macOS AltTab app from discrete
-      gestures, holding Alt/Option across consecutive actuations.
+      Hold Alt/Option for three-finger contact and perform the selected
+      OS-specific swipe action. Release when the three-finger contact ends.
 
 DT_COMPAT_ZMK_BEHAVIOR_HYPER_GUARD := zmk,behavior-hyper-guard
 

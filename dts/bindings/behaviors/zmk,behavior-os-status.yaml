@@ -1,0 +1,3 @@
+description: Mirror the active host slot and OS mode to split-peripheral displays.
+compatible: "zmk,behavior-os-status"
+include: two_param.yaml

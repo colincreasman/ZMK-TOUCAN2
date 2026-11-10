@@ -13,6 +13,7 @@ if(CONFIG_ZMK_DISPLAY AND CONFIG_NICE_VIEW_WIDGET_STATUS)
     zephyr_library_sources(widgets/battery_peripheral.c)
   endif()
   zephyr_library_sources(widgets/util.c)
+  zephyr_library_sources(widgets/os_status.c)
   
   if(NOT CONFIG_ZMK_SPLIT OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
     if(CONFIG_TOUCAN_STATUS_SCREEN EQUAL 1)

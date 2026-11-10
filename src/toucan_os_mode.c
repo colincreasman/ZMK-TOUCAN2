@@ -9,6 +9,7 @@
 #include <zephyr/settings/settings.h>
 
 #include "toucan_os_mode.h"
+#include "toucan_os_status.h"
 
 #if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 #include <zmk/endpoints.h>
@@ -33,7 +34,7 @@ static uint8_t modes[TOUCAN_OS_MODE_SLOTS] = {
     [0 ...(TOUCAN_OS_MODE_SLOTS - 1)] = TOUCAN_OS_MODE_DEFAULT,
 };
 
-static int current_slot(void) {
+uint8_t toucan_os_mode_host_slot(void) {
 #ifdef TOUCAN_OS_MODE_PER_HOST
     struct zmk_endpoint_instance endpoint = zmk_endpoints_selected();
 
@@ -46,7 +47,7 @@ static int current_slot(void) {
 }
 
 enum toucan_os_mode toucan_os_mode_get(void) {
-    return modes[current_slot()] == TOUCAN_OS_WIN ? TOUCAN_OS_WIN : TOUCAN_OS_MAC;
+    return modes[toucan_os_mode_host_slot()] == TOUCAN_OS_WIN ? TOUCAN_OS_WIN : TOUCAN_OS_MAC;
 }
 
 #if IS_ENABLED(CONFIG_SETTINGS)
@@ -122,7 +123,7 @@ void toucan_os_mode_set(enum toucan_os_mode mode) {
         return;
     }
 
-    const int slot = current_slot();
+    const int slot = toucan_os_mode_host_slot();
 
     if (modes[slot] == mode) {
         return;
@@ -131,6 +132,9 @@ void toucan_os_mode_set(enum toucan_os_mode mode) {
     modes[slot] = mode;
     LOG_INF("OS mode for host slot %d set to %s", slot, mode == TOUCAN_OS_WIN ? "windows" : "mac");
     toucan_os_mode_save();
+#if IS_ENABLED(CONFIG_ZMK_BEHAVIOR_OS_STATUS)
+    toucan_os_status_refresh();
+#endif
 }
 
 void toucan_os_mode_toggle(void) {

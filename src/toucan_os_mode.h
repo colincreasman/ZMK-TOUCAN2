@@ -17,6 +17,7 @@ enum toucan_os_mode {
 };
 
 enum toucan_os_mode toucan_os_mode_get(void);
+uint8_t toucan_os_mode_host_slot(void);
 
 void toucan_os_mode_set(enum toucan_os_mode mode);
 
