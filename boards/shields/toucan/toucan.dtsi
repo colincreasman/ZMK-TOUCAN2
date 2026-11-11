@@ -108,9 +108,8 @@
     // OS-aware gesture shortcuts. Each of these picks between a macOS binding
     // (first) and a Windows binding (second) at the moment it fires, based on
     // the runtime mode `&os_mode` set for the active host (USB or BT profile)
-    // on layer 3. macOS behavior is
-    // unchanged from the tuned-and-tested setup; only the Windows column is
-    // new.
+    // on layer 3. Mac shortcuts are stateless; Windows window switching holds
+    // Alt for the three-finger contact.
     //
     // A runtime switch rather than the old compile-time TOUCAN_WIN_MODE define,
     // because this keyboard moves between machines over its Bluetooth profiles
@@ -129,11 +128,41 @@
             #binding-cells = <2>;
         };
 
-        // Three-finger contact holds Alt/Option; lifting releases it.
+        // Windows three-finger contact holds Alt; lifting releases it.
         win_switcher: win_switcher {
             compatible = "zmk,behavior-win-switcher";
             #binding-cells = <1>;
             tap-ms = <12>;
+        };
+
+        os_swipe_contact: os_swipe_contact {
+            compatible = "zmk,behavior-os-select";
+            #binding-cells = <0>;
+            bindings = <&none>, <&win_switcher TOUCAN_GESTURE_CONTACT>;
+        };
+
+        os_swipe_up: os_swipe_up {
+            compatible = "zmk,behavior-os-select";
+            #binding-cells = <0>;
+            bindings = <&kp LA(GRAVE)>, <&win_switcher TOUCAN_GESTURE_UP>;
+        };
+
+        os_swipe_down: os_swipe_down {
+            compatible = "zmk,behavior-os-select";
+            #binding-cells = <0>;
+            bindings = <&kp LG(W)>, <&win_switcher TOUCAN_GESTURE_DOWN>;
+        };
+
+        os_swipe_left: os_swipe_left {
+            compatible = "zmk,behavior-os-select";
+            #binding-cells = <0>;
+            bindings = <&kp LG(LS(GRAVE))>, <&win_switcher TOUCAN_GESTURE_LEFT>;
+        };
+
+        os_swipe_right: os_swipe_right {
+            compatible = "zmk,behavior-os-select";
+            #binding-cells = <0>;
+            bindings = <&kp LG(GRAVE)>, <&win_switcher TOUCAN_GESTURE_RIGHT>;
         };
 
         // 2-finger horizontal swipe, page navigation.
@@ -302,7 +331,7 @@
             compatible = "zmk,input-processor-behaviors";
             #input-processor-cells = <0>;
             codes = <TOUCAN_INPUT_BTN_THREE_FINGER>;
-            bindings = <&win_switcher TOUCAN_GESTURE_CONTACT>;
+            bindings = <&os_swipe_contact>;
         };
 
         // 3-finger swipe shortcuts. These come from the driver's
@@ -313,11 +342,11 @@
         //   - Up -> Mission Control on macOS (remapped to Opt+` on this Mac,
         //     NOT the Ctrl+Up default, so Ctrl+Up did nothing at all here) and
         //     Task View on Windows.
-        //   - Right -> Tab while Alt/Option is held by three-finger contact.
-        //   - Left -> Shift+Tab; Mac first opens AltTab with Tab if needed.
+        //   - Right/left -> Mac Cmd+grave / Cmd+Shift+grave (stateless).
+        //     Windows Tab / Shift+Tab while contact holds Alt.
         //   - Down -> Cmd+W on macOS, Ctrl+W on Windows.
         //
-        // The OS-specific sequences live in behavior_win_switcher.c.
+        // Mac shortcuts are above; Windows sequences live in behavior_win_switcher.c.
         //
         // The driver reports each nonzero axis independently, so a strongly
         // diagonal swipe can emit a vertical *and* a horizontal shortcut in the
@@ -334,10 +363,7 @@
             compatible = "zmk,input-processor-behaviors";
             #input-processor-cells = <0>;
             codes = <INPUT_BTN_NORTH INPUT_BTN_EAST INPUT_BTN_SOUTH INPUT_BTN_WEST>;
-            bindings = <&win_switcher TOUCAN_GESTURE_UP>,
-                       <&win_switcher TOUCAN_GESTURE_LEFT>,
-                       <&win_switcher TOUCAN_GESTURE_DOWN>,
-                       <&win_switcher TOUCAN_GESTURE_RIGHT>;
+            bindings = <&os_swipe_up>, <&os_swipe_left>, <&os_swipe_down>, <&os_swipe_right>;
         };
     };
 

@@ -75,9 +75,6 @@ static int raise_zmk_keycode_state_changed_from_encoded(uint32_t key, bool press
     return 0;
 }
 
-#include "../src/toucan_os_mode.h"
-static enum toucan_os_mode test_mode;
-enum toucan_os_mode toucan_os_mode_get(void) { return test_mode; }
 #include "../src/behavior_win_switcher.c"
 #undef DT_DRV_COMPAT
 #include "../src/input_processor_swipe_arbiter.c"
@@ -102,13 +99,12 @@ static void lift(void) {
     on_keymap_binding_released(&binding, (struct zmk_behavior_binding_event){0});
 }
 
-static void reset(enum toucan_os_mode mode) {
+static void reset(void) {
     lift();
     drain();
     for (size_t i = 1; i < sizeof(host_keys) / sizeof(host_keys[0]); i++) {
         assert(!host_keys[i]);
     }
-    test_mode = mode;
     event_count = 0;
     logged_errors = 0;
 }
@@ -126,8 +122,8 @@ static void expect(const struct key_event *expected, size_t count) {
     expect(expected, sizeof(expected) / sizeof(expected[0])); \
 } while (0)
 
-static void test_contact_and_right(enum toucan_os_mode mode) {
-    reset(mode);
+static void test_contact_and_right(void) {
+    reset();
     press(TOUCAN_GESTURE_RIGHT); // No inferred contact from a swipe.
     drain();
     assert(event_count == 0);
@@ -140,7 +136,7 @@ static void test_contact_and_right(enum toucan_os_mode mode) {
     press(TOUCAN_GESTURE_RIGHT);
     drain();
     assert(host_keys[LALT]);
-    press(TOUCAN_GESTURE_LEFT); // No new primer once the switcher is open.
+    press(TOUCAN_GESTURE_LEFT);
     drain();
     lift();
     drain();
@@ -149,58 +145,38 @@ static void test_contact_and_right(enum toucan_os_mode mode) {
 }
 
 static void test_left(void) {
-    reset(TOUCAN_OS_WIN);
+    reset();
     press(TOUCAN_GESTURE_CONTACT);
     press(TOUCAN_GESTURE_LEFT);
     lift(); // Lift before the queued sequence runs must not drop the action.
     drain();
     EXPECT({LALT, true}, {LSHIFT, true}, {TAB, true}, {TAB, false},
            {LSHIFT, false}, {LALT, false});
-    reset(TOUCAN_OS_MAC);
-    press(TOUCAN_GESTURE_CONTACT);
-    test_mode = TOUCAN_OS_WIN; // Mode is captured at contact, not mid-sequence.
-    press(TOUCAN_GESTURE_LEFT);
-    lift();
-    drain();
-    EXPECT({LALT, true}, {TAB, true}, {TAB, false}, {LSHIFT, true},
-           {TAB, true}, {TAB, false},
-           {LSHIFT, false}, {LALT, false});
 }
 
 static void test_up(void) {
-    reset(TOUCAN_OS_MAC);
+    reset();
     press(TOUCAN_GESTURE_CONTACT);
     press(TOUCAN_GESTURE_UP);
-    drain();
-    EXPECT({LALT, true}, {GRAVE, true}, {GRAVE, false});
-    assert(host_keys[LALT]);
-    press(TOUCAN_GESTURE_RIGHT);
-    drain();
-    assert(event_count == 3); // Mission Control ends navigation until lift.
-    lift();
-    drain();
-    reset(TOUCAN_OS_WIN);
-    press(TOUCAN_GESTURE_CONTACT);
-    press(TOUCAN_GESTURE_UP);
+    press(TOUCAN_GESTURE_RIGHT); // Task View ends navigation until lift.
     lift();
     drain();
     EXPECT({LALT, true}, {LALT, false}, {LGUI, true},
            {TAB, true}, {TAB, false}, {LGUI, false});
 }
 
-static void test_down(enum toucan_os_mode mode) {
-    reset(mode);
+static void test_down(void) {
+    reset();
     press(TOUCAN_GESTURE_CONTACT);
     press(TOUCAN_GESTURE_DOWN);
     lift();
     drain();
-    const uint32_t modifier = mode == TOUCAN_OS_MAC ? LGUI : LCTRL;
-    EXPECT({LALT, true}, {LALT, false}, {modifier, true},
-           {W, true}, {W, false}, {modifier, false});
+    EXPECT({LALT, true}, {LALT, false}, {LCTRL, true},
+           {W, true}, {W, false}, {LCTRL, false});
 }
 
 static void test_rapid_contacts_and_overflow(void) {
-    reset(TOUCAN_OS_WIN);
+    reset();
     press(TOUCAN_GESTURE_CONTACT);
     lift();
     press(TOUCAN_GESTURE_CONTACT);
@@ -209,7 +185,7 @@ static void test_rapid_contacts_and_overflow(void) {
     drain();
     EXPECT({LALT, true}, {LALT, false}, {LALT, true},
            {TAB, true}, {TAB, false}, {LALT, false});
-    reset(TOUCAN_OS_WIN);
+    reset();
     assert(press(99) == -EINVAL);
     press(TOUCAN_GESTURE_CONTACT);
     drain(); // Alt is actually down when the queue later overflows.
@@ -254,8 +230,8 @@ static int raw_swipe(const struct device *dev, uint16_t code) {
     return result;
 }
 
-static void test_continuous_swipes(enum toucan_os_mode mode) {
-    reset(mode);
+static void test_continuous_swipes(void) {
+    reset();
     const struct arbiter_config config = {.lead = 2, .max_samples = 8, .reset_ms = 400};
     struct arbiter_data data = {0};
     const struct device dev = {.config = &config, .data = &data};
@@ -282,34 +258,17 @@ static void test_continuous_swipes(enum toucan_os_mode mode) {
            {TAB, true}, {TAB, false}, {LALT, false});
 }
 
-static void test_mac_left_primes_once(void) {
-    reset(TOUCAN_OS_MAC);
-    press(TOUCAN_GESTURE_CONTACT);
-    press(TOUCAN_GESTURE_LEFT);
-    press(TOUCAN_GESTURE_LEFT);
-    lift();
-    drain();
-    EXPECT({LALT, true}, {TAB, true}, {TAB, false},
-           {LSHIFT, true}, {TAB, true}, {TAB, false}, {LSHIFT, false},
-           {LSHIFT, true}, {TAB, true}, {TAB, false}, {LSHIFT, false},
-           {LALT, false});
-}
-
 int main(void) {
-    test_contact_and_right(TOUCAN_OS_MAC);
-    test_contact_and_right(TOUCAN_OS_WIN);
+    test_contact_and_right();
     test_left();
     test_up();
-    test_down(TOUCAN_OS_MAC);
-    test_down(TOUCAN_OS_WIN);
+    test_down();
     test_rapid_contacts_and_overflow();
     test_arbiter_contact_transition();
-    test_continuous_swipes(TOUCAN_OS_MAC);
-    test_continuous_swipes(TOUCAN_OS_WIN);
-    test_mac_left_primes_once();
-    reset(TOUCAN_OS_MAC);
-    puts("PASS: contact lifetime, both-OS directions, quick lift, mode capture, raw-repeat suppression, "
+    test_continuous_swipes();
+    reset();
+    puts("PASS: Windows contact lifetime, directions, quick lift, raw-repeat suppression, "
          "rapid contacts, overflow cleanup, three-to-two-finger rearm, continuous reversals, "
-         "same-direction pause rearm, single Mac primer");
+         "same-direction pause rearm");
     return 0;
 }

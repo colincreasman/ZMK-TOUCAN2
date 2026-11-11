@@ -15,8 +15,6 @@
 #include <zmk/behavior.h>
 #include <zmk/events/keycode_state_changed.h>
 
-#include "toucan_os_mode.h"
-
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
@@ -37,8 +35,6 @@ static uint8_t step_count;
 static int64_t next_step_at;
 static bool contact_active;
 static bool terminal_action;
-static bool switcher_open;
-static bool mac_mode;
 static bool alt_queued;
 static bool alt_held;
 static bool shift_held;
@@ -46,7 +42,6 @@ static bool tab_held;
 static bool gui_held;
 static bool ctrl_held;
 static bool w_held;
-static bool grave_held;
 
 static void send_key(uint32_t keycode, bool pressed) {
     switch (keycode) {
@@ -67,9 +62,6 @@ static void send_key(uint32_t keycode, bool pressed) {
         break;
     case W:
         w_held = pressed;
-        break;
-    case GRAVE:
-        grave_held = pressed;
         break;
     }
     raise_zmk_keycode_state_changed_from_encoded(keycode, pressed, k_uptime_get());
@@ -106,9 +98,6 @@ static bool reserve_steps(uint8_t count) {
     }
     if (w_held) {
         send_key(W, false);
-    }
-    if (grave_held) {
-        send_key(GRAVE, false);
     }
     if (shift_held) {
         send_key(LSHIFT, false);
@@ -159,13 +148,11 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
             }
             contact_active = true;
             terminal_action = false;
-            switcher_open = false;
-            mac_mode = toucan_os_mode_get() == TOUCAN_OS_MAC;
             alt_queued = true;
             queue_step(LALT, true);
         }
     } else if (contact_active && !terminal_action) {
-        // The longest action is the first Mac left: Tab, then Shift+Tab.
+        // Up/down release Alt before sending their four-report shortcut.
         if (!reserve_steps(6)) {
             k_mutex_unlock(&switcher_lock);
             return -ENOSPC;
@@ -173,37 +160,27 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
         switch (binding->param1) {
         case TOUCAN_GESTURE_RIGHT:
             queue_tap(TAB);
-            switcher_open = true;
             break;
         case TOUCAN_GESTURE_LEFT:
-            if (mac_mode && !switcher_open) {
-                queue_tap(TAB);
-            }
             queue_step(LSHIFT, true);
             queue_tap(TAB);
             queue_step(LSHIFT, false);
-            switcher_open = true;
             break;
         case TOUCAN_GESTURE_UP:
             terminal_action = true;
-            if (mac_mode) {
-                queue_tap(GRAVE);
-            } else {
-                queue_step(LALT, false);
-                alt_queued = false;
-                queue_step(LGUI, true);
-                queue_tap(TAB);
-                queue_step(LGUI, false);
-            }
+            queue_step(LALT, false);
+            alt_queued = false;
+            queue_step(LGUI, true);
+            queue_tap(TAB);
+            queue_step(LGUI, false);
             break;
         case TOUCAN_GESTURE_DOWN:
             terminal_action = true;
             queue_step(LALT, false);
             alt_queued = false;
-            const uint32_t mod = mac_mode ? LGUI : LCTRL;
-            queue_step(mod, true);
+            queue_step(LCTRL, true);
             queue_tap(W);
-            queue_step(mod, false);
+            queue_step(LCTRL, false);
             break;
         }
     }
