@@ -177,6 +177,19 @@
             key-positions = <1 2>;  // Combo q+w for ESCAPE
             bindings = <&kp ESC>;
         };
+        // Base-only so the same positions remain independent symbols on L1.
+        combo_enter_zx {
+            timeout-ms = <25>;
+            key-positions = <25 26>;
+            bindings = <&kp RET>;
+            layers = <L0>;
+        };
+        combo_enter_dot_slash {
+            timeout-ms = <25>;
+            key-positions = <33 34>;
+            bindings = <&kp RET>;
+            layers = <L0>;
+        };
         combo_maintenance_layer {
             timeout-ms = <100>;
             key-positions = <36 41>;  // Hold both far outer thumbs.
@@ -197,7 +210,7 @@
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
                 &none       HRML(A,         S,          D,          F)      &kp G           &kp H       HRMR(J,         K,          L,          BSLH)   &none
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
-                &none       &kp Z       &kp X       &kp C       &kp V       &kp B           &kp N       &kp M       &kp COMMA   &hyper_guard DOT &kp RET     &none
+                &none       &kp Z       &kp X       &kp C       &kp V       &kp B           &kp N       &kp M       &kp COMMA   &hyper_guard DOT &kp FSLH    &none
         //     ╰───────────┴───────────┴───────────├───────────├───────────┼───────────┤   ├───────────├───────────┼───────────┴───────────┴───────────╯
                                                 &ht LSHFT GRAVE &mo L1  &ht LSHFT TAB    &lt L1 SPACE  &kp BSPC   &ht RGUI MINUS
         //                                         ╰───────────┴───────────┴───────────╯   ╰───────────┴───────────┴───────────╯
@@ -213,7 +226,7 @@
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
                 &none       &trans      &trans      &trans      &trans      &kp EQUAL       &kp LEFT    &kp DOWN    &kp UP      &kp RIGHT   &trans      &none
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
-                &none       &kp LPAR    &kp RPAR    &kp LBRC    &kp RBRC    &kp QMARK       &kp SEMI    &kp SQT     &kp LBKT    &kp RBKT    &kp FSLH    &none
+                &none       &kp LPAR    &kp RPAR    &kp LBRC    &kp RBRC    &kp QMARK       &kp SEMI    &kp SQT     &kp LBKT    &kp RBKT    &kp UNDER   &none
         //     ╰───────────┴───────────┴───────────├───────────├───────────┼───────────┤   ├───────────├───────────┼───────────┴───────────┴───────────╯
                                                    &trans      &trans      &trans          &trans      &trans      &trans
         //                                         ╰───────────┴───────────┴───────────╯   ╰───────────┴───────────┴───────────╯
