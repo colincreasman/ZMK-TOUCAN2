@@ -47,39 +47,42 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   Implemented by `zmk,behavior-os-select` ([src/behavior_os_select.c](src/behavior_os_select.c)), which wraps two
   bindings and picks between them when the gesture fires, and `zmk,behavior-os-mode`
   ([src/behavior_os_mode.c](src/behavior_os_mode.c)), which sets the mode (`0` = macOS, `1` = Windows, `2` =
-  toggle). Two-finger navigation uses the `os_nav_*` bindings in `toucan.dtsi`; three-finger sequences use
-  `behavior_win_switcher.c` and capture the OS at three-finger touchdown. To change which
+  toggle). Two-finger navigation uses the `os_nav_*` bindings in `toucan.dtsi`; three-finger gestures use
+  `os_swipe_*`. Mac gestures send ordinary shortcuts; only Windows uses
+  `behavior_win_switcher.c` for contact-held Alt. To change which
   mode hosts that were never set default to, set `CONFIG_TOUCAN_OS_MODE_DEFAULT_WIN=y` in the shield `.conf` files.
 
   | Gesture | macOS | Windows |
   |---|---|---|
   | 3-finger up | `Opt+\`` (Mission Control) | `Win+Tab` (Task View) |
   | 3-finger down | `Cmd+W` (close window/tab) | `Ctrl+W` (close tab) |
-  | 3-finger left | First left: `Opt+Tab`, then one `Shift+Tab`; later lefts: `Shift+Tab` | `Alt+Shift+Tab` (switcher back) |
-  | 3-finger right | `Opt+Tab` (AltTab forward) | `Alt+Tab` (switcher forward) |
+  | 3-finger left | `Cmd+Shift+\`` (previous window) | `Alt+Shift+Tab` (switcher back) |
+  | 3-finger right | `Cmd+\`` (next window) | `Alt+Tab` (switcher forward) |
   | 2-finger left | `Cmd+[` (back) | `Alt+Left` |
   | 2-finger right | `Cmd+]` (forward) | `Alt+Right` |
 
-  **Three-finger contact, not a timer, holds `Alt`/`Option`.** Touching with three fingers presses only that
+  **Mac three-finger gestures are stateless shortcuts.** Touchdown/lift sends no keys, and left/right
+  sends only `Cmd+Shift+grave` / `Cmd+grave`. There is no Option hold, Tab primer, switcher session,
+  or AltTab dependency. Up sends `Opt+grave` for Mission Control; down sends `Cmd+W`.
+
+  **Windows three-finger contact, not a timer, holds `Alt`.** Touching with three fingers presses only that
   modifier; it remains down while three fingers stay on the pad, even without movement. A right swipe taps
-  Tab. A Windows left swipe holds Shift for one Tab tap. A Mac left swipe opens
-  [AltTab](https://alt-tab-macos.netlify.app/) with Tab only if it has not already opened during this contact,
-  then sends one Shift+Tab. Subsequent left/right strokes send only Shift+Tab/Tab, keeping Option held.
+  Tab; a left swipe holds Shift for one Tab tap.
   A stable horizontal reversal rearms another stroke; a 400ms pause also rearms a same-direction stroke,
-  without lifting the fingers. Sustained movement does not flood the switcher with repeated Tab taps.
-  Lifting (or dropping below three fingers) releases the modifier and commits the selection.
-  Mac up taps grave while Option stays held. Windows up releases Alt before sending Win+Tab.
-  Down releases Alt/Option before sending Ctrl+W (Windows) or Cmd+W (Mac). Any accepted short key sequence
+  without lifting the fingers. Sustained movement does not flood either OS with repeated shortcuts.
+  On Windows, lifting (or dropping below three fingers) releases Alt and commits the selection.
+  Up releases Alt before sending Win+Tab; down releases Alt before sending Ctrl+W.
+  Any accepted short Windows key sequence
   finishes before contact release, even if the fingers lift quickly. There is no 1s timeout.
-  AltTab must be running on the Mac with `Option+Tab` / `Option+Shift+Tab` configured.
-- **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) sends 3-finger directions to `zmk,behavior-win-switcher` ([src/behavior_win_switcher.c](src/behavior_win_switcher.c)), which implements the contact-held sequences above. On macOS, up sends `Option+\`` -- this Mac remaps Mission Control to `Opt+\`` under System Settings > Keyboard > Keyboard Shortcuts > Mission Control, so the `Ctrl+Up` default does nothing here. The driver emits horizontal and vertical events independently; the 40ms throttle and swipe arbiter reject noisy diagonals and repeat samples.
+- **Swipe shortcuts**: the `swipe_button_mapper` node in [boards/shields/toucan/toucan.dtsi](boards/shields/toucan/toucan.dtsi) sends 3-finger directions to OS-select bindings. Only Windows delegates to `zmk,behavior-win-switcher` ([src/behavior_win_switcher.c](src/behavior_win_switcher.c)). On macOS, up sends `Option+\`` -- this Mac remaps Mission Control to `Opt+\`` under System Settings > Keyboard > Keyboard Shortcuts > Mission Control, so the `Ctrl+Up` default does nothing here. The driver emits horizontal and vertical events independently; the 40ms throttle and swipe arbiter reject noisy diagonals and repeat samples.
 - **Three-finger contact reporting**: `config/west.yml` pins the previously used Azoteq driver revision.
   [cmake/tps43-contact.cmake](cmake/tps43-contact.cmake) applies the small
   [contact patch](patches/tps43-three-finger-contact.patch) when building the right half: the driver already
   reads finger count, but now emits `BTN_TOOL_TRIPLETAP` (`0x14e`) when three-finger contact starts/ends,
   before any direction samples. The event crosses the existing split link to the central half/dongle.
   **Flash the right half AND the active central half/dongle for this change.** With an older right-half image,
-  contact-held gestures cannot start. One-/two-finger processing and the +41-degree rotation are unchanged.
+  Windows contact-held gestures cannot start. Mac shortcuts do not require this contact event.
+  One-/two-finger processing and the +41-degree rotation are unchanged.
   Run `python3 tests/run_gesture_tests.py` for deterministic tests of the actual gesture behavior and arbiter.
 
 > **Gesture tuning is dialled in -- do not change these values casually.**

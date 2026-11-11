@@ -2,12 +2,12 @@
 # SPDX-License-Identifier: MIT
 
 description: |
-  Three-finger contact holds Alt/Option until the contact ends.
+  Windows three-finger contact holds Alt until the contact ends.
   Parameter 0 = right, 1 = left, 2 = up, 3 = down, 4 = contact.
   Left/right presses navigate repeatedly during contact; direction releases
-  do nothing. The first Mac left primes the switcher with Tab before Shift+Tab.
+  do nothing.
   Up/down end navigation until the next contact.
-  Contact press/release starts/ends the session. The OS is captured on contact.
+  Contact press/release starts/ends the session. Mac gestures do not use this behavior.
 
 compatible: "zmk,behavior-win-switcher"
 
