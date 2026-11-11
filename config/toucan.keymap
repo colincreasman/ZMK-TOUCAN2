@@ -54,8 +54,8 @@
 
 / {
     behaviors {
-        // Thumb hold-tap. Drives the thumb keys on BOTH halves:
-        // `&ht LG(C) ESC`, `&ht LSHFT TAB` (left) and `&ht RG(V) ESC` (right).
+        // Thumb hold-tap: grave/Shift and Tab/Shift on the left,
+        // minus/Cmd on the right. Left-middle L1 is immediate, not a hold-tap.
         //
         // Deliberately has NO `global-quick-tap` / `require-prior-idle-ms`.
         // Those make ZMK resolve the key to an *instant tap* whenever any other
@@ -197,9 +197,9 @@
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
                 &none       HRML(A,         S,          D,          F)      &kp G           &kp H       HRMR(J,         K,          L,          BSLH)   &none
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
-                &none       &kp Z       &kp X       &kp C       &kp V       &kp B           &kp N       &kp M       &kp COMMA   &hyper_guard DOT &kp FSLH    &none
+                &none       &kp Z       &kp X       &kp C       &kp V       &kp B           &kp N       &kp M       &kp COMMA   &hyper_guard DOT &kp RET     &none
         //     ╰───────────┴───────────┴───────────├───────────├───────────┼───────────┤   ├───────────├───────────┼───────────┴───────────┴───────────╯
-                                                &ht LG(C) ESC  &kp RET   &ht LSHFT TAB    &lt L1 SPACE  &kp BSPC   &ht RG(V) ESC
+                                                &ht LSHFT GRAVE &mo L1  &ht LSHFT TAB    &lt L1 SPACE  &kp BSPC   &ht RGUI MINUS
         //                                         ╰───────────┴───────────┴───────────╯   ╰───────────┴───────────┴───────────╯
             >;
         };
@@ -209,11 +209,11 @@
             LAYER_NAME("NUM")
             bindings = <
         //     ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮   ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮
-                &none       &kp ESC     &kp N1      &kp N2      &kp N3      &trans          &trans      &trans      &kp UP      &kp MINUS   &kp EQUAL   &none
+                &none       &kp N1      &kp N2      &kp N3      &kp N4      &kp N5          &kp N6      &kp N7      &kp N8      &kp N9      &kp N0      &none
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
-                &none       HRML(GRAVE,     N4,         N5,         N6)     &trans          &trans      &kp LEFT    &kp DOWN    &kp RIGHT   &trans      &none
+                &none       &trans      &trans      &trans      &trans      &kp EQUAL       &kp LEFT    &kp DOWN    &kp UP      &kp RIGHT   &trans      &none
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
-                &none       &trans      &kp N7      &kp N8      &kp N9      &kp N0          &kp SEMI    &kp SQT     &kp LBKT    &kp RBKT    &trans      &none
+                &none       &kp LPAR    &kp RPAR    &kp LBRC    &kp RBRC    &kp QMARK       &kp SEMI    &kp SQT     &kp LBKT    &kp RBKT    &kp FSLH    &none
         //     ╰───────────┴───────────┴───────────├───────────├───────────┼───────────┤   ├───────────├───────────┼───────────┴───────────┴───────────╯
                                                    &trans      &trans      &trans          &trans      &trans      &trans
         //                                         ╰───────────┴───────────┴───────────╯   ╰───────────┴───────────┴───────────╯
