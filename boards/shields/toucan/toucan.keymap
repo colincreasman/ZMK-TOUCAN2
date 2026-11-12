@@ -77,21 +77,38 @@
             bindings = <&kp>, <&kp>;
         };
 
-        // Tab on tap, Shift on hold; double-tap within 200ms for Caps Word.
-        tab_caps_dance: tab_caps_dance {
+        a_caps_dance: a_caps_dance {
             compatible = "zmk,behavior-tap-dance";
             #binding-cells = <0>;
             tapping-term-ms = <200>;
-            bindings = <&kp TAB>, <&caps_word>;
+            bindings = <&kp A>, <&caps_word>;
         };
 
-        tab_shift: tab_shift {
+        bslash_caps_dance: bslash_caps_dance {
+            compatible = "zmk,behavior-tap-dance";
+            #binding-cells = <0>;
+            tapping-term-ms = <200>;
+            bindings = <&kp BSLH>, <&caps_word>;
+        };
+
+        a_shift: a_shift {
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
             flavor = "balanced";
-            tapping-term-ms = <175>;
-            quick-tap-ms = <125>;
-            bindings = <&kp>, <&tab_caps_dance>;
+            tapping-term-ms = <190>;
+            quick-tap-ms = <120>;
+            require-prior-idle-ms = <100>;
+            bindings = <&kp>, <&a_caps_dance>;
+        };
+
+        bslash_shift: bslash_shift {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <190>;
+            quick-tap-ms = <120>;
+            require-prior-idle-ms = <100>;
+            bindings = <&kp>, <&bslash_caps_dance>;
         };
 
         // `(` and `)` that become `<` and `>` while Shift is held.
@@ -140,6 +157,17 @@
             tapping-term-ms = <190>;
             quick-tap-ms = <120>;
             require-prior-idle-ms = <100>;
+            bindings = <&kp>, <&kp>;
+        };
+
+        hmd: home_row_mod_d {
+            label = "hrm_d";
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <160>;
+            quick-tap-ms = <120>;
+            require-prior-idle-ms = <50>;
             bindings = <&kp>, <&kp>;
         };
 
@@ -266,11 +294,11 @@
         //     ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮   ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮
                 &none       &kp Q       &kp W       &kp E       &kp R       &kp T           &kp Y       &kp U       &kp I       &kp O       &kp P       &none
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
-                &none       HRML(A,         S,          D,          F)      &kp G           &kp H       HRMR(J,         K,          L,          BSLH)   &none
+                &none       &a_shift LSHFT 0 &hml LCTRL S &hmd LALT D &hml LGUI F &kp G     &kp H       &hmr RGUI J &hmr RALT K &hmr RCTRL L &bslash_shift RSHFT 0 &none
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
                 &none       &kp Z       &kp X       &kp C       &kp V       &kp B           &kp N       &kp M       &kp COMMA   &hyper_guard DOT &kp FSLH    &none
         //     ╰───────────┴───────────┴───────────├───────────├───────────┼───────────┤   ├───────────├───────────┼───────────┴───────────┴───────────╯
-                                                &ht LGUI GRAVE &lt L1 RET &tab_shift LSHFT 0 &lt L1 SPACE  &kp BSPC   &ht RGUI SEMI
+                                                &ht LGUI GRAVE &lt L1 RET &ht LSHFT TAB &lt L1 SPACE  &kp BSPC   &ht RGUI SEMI
         //                                         ╰───────────┴───────────┴───────────╯   ╰───────────┴───────────┴───────────╯
             >;
         };

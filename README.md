@@ -23,10 +23,10 @@ leaves the trackpad completely dead since the wrong driver is loaded).
   live on the real top pinkies (`Q` for the left half and `P` for the right) with a third on `T` for the USB
   dongle, and `M`/`W` select macOS/Windows. `layer_four` remains the mouse-click
   layer because `is_touching_processor` in `toucan.dtsi` hardcodes `&mo 4` while the trackpad is touched.
-- **Thumbs and symbol combos**: left thumbs are `` ` ``/Cmd, Enter/L1 and Tab/Shift (double-tap for Caps Word);
+- **Thumbs and symbol combos**: left thumbs are `` ` ``/Cmd, Enter/L1 and Tab/Shift;
   right thumbs are Space/L1, Backspace and `;`/Cmd. `L1`+`M` is `'`. Combos (25ms): `Z`+`X` / `.`+`/` give
   `(`/`)` on the base layer (Shift: `<`/`>`) and `[`/`]` on L1 (Shift: `{`/`}`); `A`+`S` / `L`+`\` give
-  `-`/`=` on every layer. The right home-row pinky remains `\` (Shift: `|`).
+  `-`/`=` on every layer. Double-tap A/Shift or `\`/Shift for Caps Word; single taps produce A or `\`.
 - **Sysdiagnose guard**: `.` on the base layer is `&hyper_guard DOT` instead of `&kp DOT`. It behaves exactly
   like `&kp`, except the key is dropped while Ctrl, Shift, Alt and GUI are all held. Resting four fingers on the
   left homerow mods resolves them all as holds, and with `.` that is macOS's sysdiagnose chord

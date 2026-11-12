@@ -4,70 +4,113 @@
 
 / {
     behaviors {
-        tab_caps_dance: tab_caps_dance {
-            compatible = "zmk,behavior-tap-dance";
-            #binding-cells = <0>;
-            tapping-term-ms = <200>;
-            bindings = <&kp TAB>, <&caps_word>;
-        };
-        tab_shift: tab_shift {
+        ht: hold_tap {
+            label = "hold_tap";
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
             flavor = "balanced";
             tapping-term-ms = <175>;
             quick-tap-ms = <125>;
-            bindings = <&kp>, <&tab_caps_dance>;
+            bindings = <&kp>, <&kp>;
+        };
+        a_caps_dance: a_caps_dance {
+            compatible = "zmk,behavior-tap-dance";
+            #binding-cells = <0>;
+            tapping-term-ms = <200>;
+            bindings = <&kp A>, <&caps_word>;
+        };
+        bslash_caps_dance: bslash_caps_dance {
+            compatible = "zmk,behavior-tap-dance";
+            #binding-cells = <0>;
+            tapping-term-ms = <200>;
+            bindings = <&kp BSLH>, <&caps_word>;
+        };
+        a_shift: a_shift {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <190>;
+            quick-tap-ms = <120>;
+            require-prior-idle-ms = <100>;
+            bindings = <&kp>, <&a_caps_dance>;
+        };
+        bslash_shift: bslash_shift {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <190>;
+            quick-tap-ms = <120>;
+            require-prior-idle-ms = <100>;
+            bindings = <&kp>, <&bslash_caps_dance>;
+        };
+    };
+    combos {
+        compatible = "zmk,combos";
+        minus {
+            timeout-ms = <25>;
+            key-positions = <0 5>;
+            bindings = <&kp MINUS>;
+        };
+        equal {
+            timeout-ms = <25>;
+            key-positions = <6 1>;
+            bindings = <&kp EQUAL>;
         };
     };
     keymap {
         compatible = "zmk,keymap";
         default_layer {
             bindings = <
-                &tab_shift LSHFT 0  &kp A     &kp BSPC
-                &kp SPACE           &kp RET   &kp B
+                &a_shift LSHFT 0  &bslash_shift RSHFT 0  &ht LSHFT TAB
+                &kp B             &kp SPACE               &kp S
+                &kp L             &none                   &none
             >;
         };
     };
 };
 
 &kscan {
-    rows = <2>;
+    rows = <3>;
     columns = <3>;
     events = <
-        // Single Tab, then a quick Shift chord.
+        // Three rapid Tabs must remain three Tabs, not Caps Word.
+        ZMK_MOCK_PRESS(0,2,30) ZMK_MOCK_RELEASE(0,2,30)
+        ZMK_MOCK_PRESS(0,2,30) ZMK_MOCK_RELEASE(0,2,30)
+        ZMK_MOCK_PRESS(0,2,30) ZMK_MOCK_RELEASE(0,2,300)
+        ZMK_MOCK_PRESS(1,0,20) ZMK_MOCK_RELEASE(1,0,300)
+
+        // Single taps produce A and backslash.
         ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,300)
-        ZMK_MOCK_PRESS(0,1,10) ZMK_MOCK_RELEASE(0,1,300)
-        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_PRESS(0,1,40)
-        ZMK_MOCK_RELEASE(0,1,10) ZMK_MOCK_RELEASE(0,0,300)
+        ZMK_MOCK_PRESS(0,1,40) ZMK_MOCK_RELEASE(0,1,300)
 
-        // Caps Word survives Backspace, but ends at Space.
+        // Each pinky double-tap enables Caps Word; Space exits.
         ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,50)
-        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,40)
-        ZMK_MOCK_PRESS(0,1,10) ZMK_MOCK_RELEASE(0,1,10)
-        ZMK_MOCK_PRESS(0,2,10) ZMK_MOCK_RELEASE(0,2,10)
-        ZMK_MOCK_PRESS(1,2,10) ZMK_MOCK_RELEASE(1,2,10)
-        ZMK_MOCK_PRESS(1,0,10) ZMK_MOCK_RELEASE(1,0,10)
-        ZMK_MOCK_PRESS(0,1,10) ZMK_MOCK_RELEASE(0,1,300)
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,250)
+        ZMK_MOCK_PRESS(1,0,20) ZMK_MOCK_RELEASE(1,0,20)
+        ZMK_MOCK_PRESS(1,1,20) ZMK_MOCK_RELEASE(1,1,300)
+        ZMK_MOCK_PRESS(0,1,40) ZMK_MOCK_RELEASE(0,1,50)
+        ZMK_MOCK_PRESS(0,1,40) ZMK_MOCK_RELEASE(0,1,250)
+        ZMK_MOCK_PRESS(1,0,20) ZMK_MOCK_RELEASE(1,0,20)
+        ZMK_MOCK_PRESS(1,1,20) ZMK_MOCK_RELEASE(1,1,300)
 
-        // Enter also ends Caps Word.
-        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,50)
-        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,40)
-        ZMK_MOCK_PRESS(0,1,10) ZMK_MOCK_RELEASE(0,1,10)
-        ZMK_MOCK_PRESS(1,1,10) ZMK_MOCK_RELEASE(1,1,10)
-        ZMK_MOCK_PRESS(0,1,10) ZMK_MOCK_RELEASE(0,1,300)
+        // Both home-row keys still hold Shift; Tab still holds Shift too.
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_PRESS(1,0,40)
+        ZMK_MOCK_RELEASE(1,0,20) ZMK_MOCK_RELEASE(0,0,300)
+        ZMK_MOCK_PRESS(0,1,40) ZMK_MOCK_PRESS(1,0,40)
+        ZMK_MOCK_RELEASE(1,0,20) ZMK_MOCK_RELEASE(0,1,300)
+        ZMK_MOCK_PRESS(0,2,40) ZMK_MOCK_PRESS(1,0,40)
+        ZMK_MOCK_RELEASE(1,0,20) ZMK_MOCK_RELEASE(0,2,300)
 
-        // A single Tab ends Caps Word.
-        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,50)
-        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,40)
-        ZMK_MOCK_PRESS(0,1,10) ZMK_MOCK_RELEASE(0,1,300)
-        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,300)
-        ZMK_MOCK_PRESS(1,2,10) ZMK_MOCK_RELEASE(1,2,300)
+        // Combos involving those keys continue to work.
+        ZMK_MOCK_PRESS(0,0,10) ZMK_MOCK_PRESS(1,2,30)
+        ZMK_MOCK_RELEASE(1,2,10) ZMK_MOCK_RELEASE(0,0,300)
+        ZMK_MOCK_PRESS(2,0,10) ZMK_MOCK_PRESS(0,1,30)
+        ZMK_MOCK_RELEASE(0,1,10) ZMK_MOCK_RELEASE(2,0,300)
 
-        // A second double-tap toggles Caps Word off.
-        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,50)
-        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,300)
-        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,50)
-        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,40)
-        ZMK_MOCK_PRESS(0,1,10) ZMK_MOCK_RELEASE(0,1,100)
+        // Rolling immediately to another key preserves typing order.
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,30)
+        ZMK_MOCK_PRESS(1,0,20) ZMK_MOCK_RELEASE(1,0,300)
+        ZMK_MOCK_PRESS(0,1,40) ZMK_MOCK_RELEASE(0,1,30)
+        ZMK_MOCK_PRESS(1,0,20) ZMK_MOCK_RELEASE(1,0,300)
     >;
 };

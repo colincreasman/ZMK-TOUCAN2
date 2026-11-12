@@ -1,0 +1,66 @@
+#include <dt-bindings/zmk/keys.h>
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/kscan_mock.h>
+
+/ {
+    behaviors {
+        hml: home_row_mod_left {
+            label = "hrm_left";
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <190>;
+            quick-tap-ms = <120>;
+            require-prior-idle-ms = <100>;
+            bindings = <&kp>, <&kp>;
+        };
+        hmd: home_row_mod_d {
+            label = "hrm_d";
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <160>;
+            quick-tap-ms = <120>;
+            require-prior-idle-ms = <50>;
+            bindings = <&kp>, <&kp>;
+        };
+    };
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <
+                &hml LGUI F &kp C &hmd LALT D &kp A &none &none &none &none &none &none
+                &none &none &none &none &none &none &none &none &none &none
+                &kp Z &kp X &none &none &none &none &none &kp COMMA &kp DOT &kp FSLH
+            >;
+        };
+    };
+};
+
+&kscan {
+    rows = <3>;
+    columns = <10>;
+    events = <
+        // A tap is still F; a quick chord resolves GUI before C.
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,300)
+        ZMK_MOCK_PRESS(0,0,15) ZMK_MOCK_PRESS(0,1,20)
+        ZMK_MOCK_RELEASE(0,1,10) ZMK_MOCK_RELEASE(0,0,300)
+
+        // D taps normally; after moderate idle it can resolve as Option.
+        ZMK_MOCK_PRESS(0,2,40) ZMK_MOCK_RELEASE(0,2,300)
+        ZMK_MOCK_PRESS(0,3,20) ZMK_MOCK_RELEASE(0,3,60)
+        ZMK_MOCK_PRESS(0,2,30) ZMK_MOCK_PRESS(0,1,20)
+        ZMK_MOCK_RELEASE(0,1,10) ZMK_MOCK_RELEASE(0,2,300)
+
+        // A shorter standalone hold resolves as Option, but fast rolls still tap.
+        ZMK_MOCK_PRESS(0,2,170) ZMK_MOCK_RELEASE(0,2,300)
+        ZMK_MOCK_PRESS(0,3,10) ZMK_MOCK_RELEASE(0,3,10)
+        ZMK_MOCK_PRESS(0,2,220) ZMK_MOCK_RELEASE(0,2,100)
+
+        // A recently typed key should not suppress a hold after the idle gate.
+        ZMK_MOCK_PRESS(0,1,10) ZMK_MOCK_RELEASE(0,1,120)
+        ZMK_MOCK_PRESS(0,0,15) ZMK_MOCK_PRESS(0,1,20)
+        ZMK_MOCK_RELEASE(0,1,10) ZMK_MOCK_RELEASE(0,0,300)
+
+    >;
+};
