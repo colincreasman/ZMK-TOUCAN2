@@ -237,7 +237,7 @@
             bindings = <&kp RBKT>;
             layers = <L1>;
         };
-        // These three work on every layer.
+        // These work on every layer.
         combo_minus {
             timeout-ms = <25>;
             key-positions = <13 14>;  // A+S
@@ -247,11 +247,6 @@
             timeout-ms = <25>;
             key-positions = <21 22>;  // L+backslash
             bindings = <&kp EQUAL>;
-        };
-        combo_enter_comma_dot {
-            timeout-ms = <25>;
-            key-positions = <32 33>;  // ,+.
-            bindings = <&kp RET>;
         };
         combo_maintenance_layer {
             timeout-ms = <100>;

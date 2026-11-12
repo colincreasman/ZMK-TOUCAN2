@@ -26,7 +26,7 @@ leaves the trackpad completely dead since the wrong driver is loaded).
 - **Thumbs and symbol combos**: left thumbs are `` ` ``/Cmd, Enter/L1 and Tab/Shift (double-tap for Caps Word);
   right thumbs are Space/L1, Backspace and `;`/Cmd. `L1`+`M` is `'`. Combos (25ms): `Z`+`X` / `.`+`/` give
   `(`/`)` on the base layer (Shift: `<`/`>`) and `[`/`]` on L1 (Shift: `{`/`}`); `A`+`S` / `L`+`\` give
-  `-`/`=` and `,`+`.` gives Enter on every layer.
+  `-`/`=` on every layer. The right home-row pinky remains `\` (Shift: `|`).
 - **Sysdiagnose guard**: `.` on the base layer is `&hyper_guard DOT` instead of `&kp DOT`. It behaves exactly
   like `&kp`, except the key is dropped while Ctrl, Shift, Alt and GUI are all held. Resting four fingers on the
   left homerow mods resolves them all as holds, and with `.` that is macOS's sysdiagnose chord
