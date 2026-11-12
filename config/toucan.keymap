@@ -37,8 +37,9 @@
 #define L1 1
 #define L2 2
 #define L3 3
+#define L4 4
 
-// Layer-tap, used by the right thumb `&lt L1 SPACE`.
+// Layer-tap, used by the left Enter/L1 and right Space/L1 thumbs.
 //
 // ZMK's stock `&lt` is `tap-preferred`, which only resolves a hold when the
 // tapping term expires -- pressing and releasing another key while it is held
@@ -54,8 +55,8 @@
 
 / {
     behaviors {
-        // Thumb hold-tap. Drives the thumb keys on BOTH halves:
-        // `&ht LG(C) ESC` (left) and `&ht RG(V) ESC` (right).
+        // Thumb hold-tap: grave/Cmd on the left outer thumb and
+        // semicolon/Cmd on the right outer thumb.
         //
         // Deliberately has NO `global-quick-tap` / `require-prior-idle-ms`.
         // Those make ZMK resolve the key to an *instant tap* whenever any other
@@ -91,6 +92,21 @@
             tapping-term-ms = <175>;
             quick-tap-ms = <125>;
             bindings = <&kp>, <&tab_caps_dance>;
+        };
+
+        // `(` and `)` that become `<` and `>` while Shift is held.
+        lpar_lt: lpar_lt {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LPAR>, <&kp LT>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+
+        rpar_gt: rpar_gt {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp RPAR>, <&kp GT>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
         };
 
         // Homerow mods.
@@ -194,6 +210,49 @@
             key-positions = <1 2>;  // Combo q+w for ESCAPE
             bindings = <&kp ESC>;
         };
+        // Bracket combos on the bottom-row pinky pairs. Layer 4 is the
+        // trackpad-touch overlay, which would otherwise be the highest active
+        // layer and disable L0-only combos while a finger rests on the pad.
+        combo_left_paren {
+            timeout-ms = <25>;
+            key-positions = <25 26>;  // Z+X
+            bindings = <&lpar_lt>;
+            layers = <L0 L4>;
+        };
+        combo_right_paren {
+            timeout-ms = <25>;
+            key-positions = <33 34>;  // .+/
+            bindings = <&rpar_gt>;
+            layers = <L0 L4>;
+        };
+        combo_left_bracket {
+            timeout-ms = <25>;
+            key-positions = <25 26>;  // L1 + Z+X
+            bindings = <&kp LBKT>;
+            layers = <L1>;
+        };
+        combo_right_bracket {
+            timeout-ms = <25>;
+            key-positions = <33 34>;  // L1 + .+/
+            bindings = <&kp RBKT>;
+            layers = <L1>;
+        };
+        // These three work on every layer.
+        combo_minus {
+            timeout-ms = <25>;
+            key-positions = <13 14>;  // A+S
+            bindings = <&kp MINUS>;
+        };
+        combo_equal {
+            timeout-ms = <25>;
+            key-positions = <21 22>;  // L+backslash
+            bindings = <&kp EQUAL>;
+        };
+        combo_enter_comma_dot {
+            timeout-ms = <25>;
+            key-positions = <32 33>;  // ,+.
+            bindings = <&kp RET>;
+        };
         combo_maintenance_layer {
             timeout-ms = <100>;
             key-positions = <36 41>;  // Hold both far outer thumbs.
@@ -216,7 +275,7 @@
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
                 &none       &kp Z       &kp X       &kp C       &kp V       &kp B           &kp N       &kp M       &kp COMMA   &hyper_guard DOT &kp FSLH    &none
         //     ╰───────────┴───────────┴───────────├───────────├───────────┼───────────┤   ├───────────├───────────┼───────────┴───────────┴───────────╯
-                                                &ht LG(C) ESC  &kp RET   &tab_shift LSHFT 0 &lt L1 SPACE  &kp BSPC   &ht RG(V) ESC
+                                                &ht LGUI GRAVE &lt L1 RET &tab_shift LSHFT 0 &lt L1 SPACE  &kp BSPC   &ht RGUI SEMI
         //                                         ╰───────────┴───────────┴───────────╯   ╰───────────┴───────────┴───────────╯
             >;
         };
