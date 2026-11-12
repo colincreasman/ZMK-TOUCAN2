@@ -55,7 +55,7 @@
 
 / {
     behaviors {
-        // Thumb hold-tap: grave/Cmd on the left outer thumb and
+        // Thumb hold-tap: quote/Cmd on the left outer thumb and
         // semicolon/Cmd on the right outer thumb.
         //
         // Deliberately has NO `global-quick-tap` / `require-prior-idle-ms`.
@@ -111,18 +111,65 @@
             bindings = <&kp>, <&bslash_caps_dance>;
         };
 
-        // `(` and `)` that become `<` and `>` while Shift is held.
-        lpar_lt: lpar_lt {
+        // These symbol combos keep their output unchanged while Shift is held.
+        lpar_fixed: lpar_fixed {
             compatible = "zmk,behavior-mod-morph";
             #binding-cells = <0>;
-            bindings = <&kp LPAR>, <&kp LT>;
+            bindings = <&kp LPAR>, <&kp LPAR>;
             mods = <(MOD_LSFT|MOD_RSFT)>;
         };
-
-        rpar_gt: rpar_gt {
+        rpar_fixed: rpar_fixed {
             compatible = "zmk,behavior-mod-morph";
             #binding-cells = <0>;
-            bindings = <&kp RPAR>, <&kp GT>;
+            bindings = <&kp RPAR>, <&kp RPAR>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        lbkt_fixed: lbkt_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LBKT>, <&kp LBKT>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        rbkt_fixed: rbkt_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp RBKT>, <&kp RBKT>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        lbrc_fixed: lbrc_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LBRC>, <&kp LBRC>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        rbrc_fixed: rbrc_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp RBRC>, <&kp RBRC>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        minus_fixed: minus_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp MINUS>, <&kp MINUS>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        equal_fixed: equal_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp EQUAL>, <&kp EQUAL>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        under_fixed: under_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp UNDER>, <&kp UNDER>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        plus_fixed: plus_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp PLUS>, <&kp PLUS>;
             mods = <(MOD_LSFT|MOD_RSFT)>;
         };
 
@@ -238,43 +285,56 @@
             key-positions = <1 2>;  // Combo q+w for ESCAPE
             bindings = <&kp ESC>;
         };
-        // Bracket combos on the bottom-row pinky pairs. Layer 4 is the
-        // trackpad-touch overlay, which would otherwise be the highest active
-        // layer and disable L0-only combos while a finger rests on the pad.
+        // Symbol combos work on every layer and ignore held Shift.
         combo_left_paren {
             timeout-ms = <25>;
-            key-positions = <25 26>;  // Z+X
-            bindings = <&lpar_lt>;
-            layers = <L0 L4>;
+            key-positions = <27 28>;  // C+V
+            bindings = <&lpar_fixed>;
         };
         combo_right_paren {
             timeout-ms = <25>;
-            key-positions = <33 34>;  // .+/
-            bindings = <&rpar_gt>;
-            layers = <L0 L4>;
+            key-positions = <31 32>;  // M+COMMA
+            bindings = <&rpar_fixed>;
         };
         combo_left_bracket {
             timeout-ms = <25>;
-            key-positions = <25 26>;  // L1 + Z+X
-            bindings = <&kp LBKT>;
-            layers = <L1>;
+            key-positions = <15 16>;  // D+F
+            bindings = <&lbkt_fixed>;
         };
         combo_right_bracket {
             timeout-ms = <25>;
-            key-positions = <33 34>;  // L1 + .+/
-            bindings = <&kp RBKT>;
-            layers = <L1>;
+            key-positions = <19 20>;  // J+K
+            bindings = <&rbkt_fixed>;
         };
-        // These work on every layer.
+        combo_left_brace {
+            timeout-ms = <25>;
+            key-positions = <3 4>;  // E+R
+            bindings = <&lbrc_fixed>;
+        };
+        combo_right_brace {
+            timeout-ms = <25>;
+            key-positions = <7 8>;  // U+I
+            bindings = <&rbrc_fixed>;
+        };
         combo_minus {
             timeout-ms = <25>;
-            key-positions = <13 14>;  // A+S
-            bindings = <&kp MINUS>;
+            key-positions = <25 26>;  // Z+X
+            bindings = <&minus_fixed>;
         };
         combo_equal {
             timeout-ms = <25>;
+            key-positions = <33 34>;  // .+/
+            bindings = <&equal_fixed>;
+        };
+        combo_underscore {
+            timeout-ms = <25>;
+            key-positions = <13 14>;  // A+S
+            bindings = <&under_fixed>;
+        };
+        combo_plus {
+            timeout-ms = <25>;
             key-positions = <21 22>;  // L+backslash
-            bindings = <&kp EQUAL>;
+            bindings = <&plus_fixed>;
         };
         combo_maintenance_layer {
             timeout-ms = <100>;
@@ -298,7 +358,7 @@
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
                 &none       &kp Z       &kp X       &kp C       &kp V       &kp B           &kp N       &kp M       &kp COMMA   &hyper_guard DOT &kp FSLH    &none
         //     ╰───────────┴───────────┴───────────├───────────├───────────┼───────────┤   ├───────────├───────────┼───────────┴───────────┴───────────╯
-                                                &ht LGUI GRAVE &lt L1 RET &ht LSHFT TAB &lt L1 SPACE  &kp BSPC   &ht RGUI SEMI
+                                                &ht LGUI SQT   &lt L1 RET &ht LSHFT TAB &lt L1 SPACE  &kp BSPC   &ht RGUI SEMI
         //                                         ╰───────────┴───────────┴───────────╯   ╰───────────┴───────────┴───────────╯
             >;
         };
@@ -314,7 +374,7 @@
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
                 &none       &trans      &kp N7      &kp N8      &kp N9      &kp N0          &kp SEMI    &kp SQT     &kp LBKT    &kp RBKT    &trans      &none
         //     ╰───────────┴───────────┴───────────├───────────├───────────┼───────────┤   ├───────────├───────────┼───────────┴───────────┴───────────╯
-                                                   &trans      &trans      &trans          &trans      &trans      &trans
+                                                &ht LGUI GRAVE &trans     &trans          &trans      &trans      &trans
         //                                         ╰───────────┴───────────┴───────────╯   ╰───────────┴───────────┴───────────╯
             >;
         };

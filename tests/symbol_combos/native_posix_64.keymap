@@ -1,0 +1,184 @@
+#include <dt-bindings/zmk/keys.h>
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/kscan_mock.h>
+
+/ {
+    behaviors {
+        lpar_fixed: lpar_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LPAR>, <&kp LPAR>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        rpar_fixed: rpar_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp RPAR>, <&kp RPAR>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        lbkt_fixed: lbkt_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LBKT>, <&kp LBKT>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        rbkt_fixed: rbkt_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp RBKT>, <&kp RBKT>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        lbrc_fixed: lbrc_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LBRC>, <&kp LBRC>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        rbrc_fixed: rbrc_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp RBRC>, <&kp RBRC>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        minus_fixed: minus_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp MINUS>, <&kp MINUS>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        equal_fixed: equal_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp EQUAL>, <&kp EQUAL>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        under_fixed: under_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp UNDER>, <&kp UNDER>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+        plus_fixed: plus_fixed {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp PLUS>, <&kp PLUS>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+    };
+    combos {
+        compatible = "zmk,combos";
+        combo_left_paren {
+            timeout-ms = <25>;
+            key-positions = <27 28>;
+            bindings = <&lpar_fixed>;
+        };
+        combo_right_paren {
+            timeout-ms = <25>;
+            key-positions = <31 32>;
+            bindings = <&rpar_fixed>;
+        };
+        combo_left_bracket {
+            timeout-ms = <25>;
+            key-positions = <15 16>;
+            bindings = <&lbkt_fixed>;
+        };
+        combo_right_bracket {
+            timeout-ms = <25>;
+            key-positions = <19 20>;
+            bindings = <&rbkt_fixed>;
+        };
+        combo_left_brace {
+            timeout-ms = <25>;
+            key-positions = <3 4>;
+            bindings = <&lbrc_fixed>;
+        };
+        combo_right_brace {
+            timeout-ms = <25>;
+            key-positions = <7 8>;
+            bindings = <&rbrc_fixed>;
+        };
+        combo_minus {
+            timeout-ms = <25>;
+            key-positions = <25 26>;
+            bindings = <&minus_fixed>;
+        };
+        combo_equal {
+            timeout-ms = <25>;
+            key-positions = <33 34>;
+            bindings = <&equal_fixed>;
+        };
+        combo_underscore {
+            timeout-ms = <25>;
+            key-positions = <13 14>;
+            bindings = <&under_fixed>;
+        };
+        combo_plus {
+            timeout-ms = <25>;
+            key-positions = <21 22>;
+            bindings = <&plus_fixed>;
+        };
+    };
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <
+                &none &kp Q &kp W &kp E &kp R &kp T &kp Y
+                &kp U &kp I &kp O &kp P &none &none &kp A
+                &kp S &kp D &kp F &kp G &kp H &kp J &kp K
+                &kp L &kp BSLH &none &none &kp Z &kp X &kp C
+                &kp V &kp B &kp N &kp M &kp COMMA &kp DOT &kp FSLH
+                &none &none &none &none &kp SPACE &mo 1 &kp LSHFT
+            >;
+        };
+        layer_one {
+            bindings = <
+                &trans &trans &trans &trans &trans &trans &trans
+                &trans &trans &trans &trans &trans &kp F1 &trans
+                &trans &trans &trans &trans &trans &trans &trans
+                &trans &trans &trans &trans &trans &trans &trans
+                &trans &trans &trans &trans &trans &trans &trans
+                &trans &trans &trans &trans &trans &trans &trans
+            >;
+        };
+    };
+};
+
+&kscan {
+    rows = <6>;
+    columns = <7>;
+    events = <
+        ZMK_MOCK_PRESS(5,5,10) ZMK_MOCK_PRESS(1,5,10)
+        ZMK_MOCK_RELEASE(1,5,10) ZMK_MOCK_RELEASE(5,5,10)
+
+        // All symbol combos stay invariant with Shift held.
+        ZMK_MOCK_PRESS(5,6,40) ZMK_MOCK_PRESS(3,6,10) ZMK_MOCK_PRESS(4,0,10)
+        ZMK_MOCK_RELEASE(4,0,10) ZMK_MOCK_RELEASE(3,6,10) ZMK_MOCK_RELEASE(5,6,300)
+        ZMK_MOCK_PRESS(5,6,40) ZMK_MOCK_PRESS(4,4,10) ZMK_MOCK_PRESS(4,3,10)
+        ZMK_MOCK_RELEASE(4,3,10) ZMK_MOCK_RELEASE(4,4,10) ZMK_MOCK_RELEASE(5,6,300)
+
+        ZMK_MOCK_PRESS(5,5,20) ZMK_MOCK_PRESS(5,6,40) ZMK_MOCK_PRESS(2,1,10)
+        ZMK_MOCK_PRESS(2,2,10) ZMK_MOCK_RELEASE(2,2,10)
+        ZMK_MOCK_RELEASE(2,1,10)
+        ZMK_MOCK_PRESS(2,5,10)
+        ZMK_MOCK_PRESS(2,6,10) ZMK_MOCK_RELEASE(2,6,10)
+        ZMK_MOCK_RELEASE(2,5,10)
+
+        ZMK_MOCK_RELEASE(5,6,10) ZMK_MOCK_RELEASE(5,5,10)
+        ZMK_MOCK_PRESS(5,5,20) ZMK_MOCK_PRESS(5,6,20)
+        ZMK_MOCK_PRESS(0,3,10)
+        ZMK_MOCK_PRESS(0,4,10) ZMK_MOCK_RELEASE(0,4,10)
+        ZMK_MOCK_RELEASE(0,3,10)
+        ZMK_MOCK_PRESS(1,0,10)
+        ZMK_MOCK_PRESS(1,1,10) ZMK_MOCK_RELEASE(1,1,10)
+        ZMK_MOCK_RELEASE(1,0,10) ZMK_MOCK_RELEASE(5,6,10) ZMK_MOCK_RELEASE(5,5,300)
+
+        ZMK_MOCK_PRESS(5,6,40) ZMK_MOCK_PRESS(1,6,10) ZMK_MOCK_PRESS(2,0,10)
+        ZMK_MOCK_RELEASE(2,0,10) ZMK_MOCK_RELEASE(1,6,10) ZMK_MOCK_RELEASE(5,6,300)
+        ZMK_MOCK_PRESS(5,6,40) ZMK_MOCK_PRESS(4,5,10) ZMK_MOCK_PRESS(4,6,10)
+        ZMK_MOCK_RELEASE(4,6,10) ZMK_MOCK_RELEASE(4,5,10) ZMK_MOCK_RELEASE(5,6,300)
+        ZMK_MOCK_PRESS(5,6,40) ZMK_MOCK_PRESS(3,4,10) ZMK_MOCK_PRESS(3,5,10)
+        ZMK_MOCK_RELEASE(3,5,10) ZMK_MOCK_RELEASE(3,4,10) ZMK_MOCK_RELEASE(5,6,300)
+        ZMK_MOCK_PRESS(5,6,40) ZMK_MOCK_PRESS(4,5,10) ZMK_MOCK_PRESS(4,6,10)
+        ZMK_MOCK_RELEASE(4,6,10) ZMK_MOCK_RELEASE(4,5,10) ZMK_MOCK_RELEASE(5,6,300)
+    >;
+};

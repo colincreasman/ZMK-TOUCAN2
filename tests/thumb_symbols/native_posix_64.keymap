@@ -1,0 +1,96 @@
+#include <dt-bindings/zmk/keys.h>
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/kscan_mock.h>
+
+&lt {
+    flavor = "balanced";
+    tapping-term-ms = <175>;
+    quick-tap-ms = <125>;
+};
+
+/ {
+    behaviors {
+        ht: hold_tap {
+            label = "hold_tap";
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <175>;
+            quick-tap-ms = <125>;
+            bindings = <&kp>, <&kp>;
+        };
+    };
+    combos {
+        compatible = "zmk,combos";
+        maintenance {
+            timeout-ms = <100>;
+            key-positions = <0 3>;
+            bindings = <&mo 3>;
+            layers = <0 1 2>;
+        };
+    };
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <
+                &ht LGUI SQT &lt 1 RET &ht LSHFT TAB
+                &ht RGUI SEMI &kp X &none
+            >;
+        };
+        layer_one {
+            bindings = <
+                &ht LGUI GRAVE &trans &trans
+                &trans &trans &none
+            >;
+        };
+        layer_two {
+            bindings = <
+                &trans &trans &trans
+                &trans &trans &none
+            >;
+        };
+        layer_three {
+            bindings = <
+                &none &none &none
+                &none &none &kp F1
+            >;
+        };
+    };
+};
+
+&kscan {
+    rows = <2>;
+    columns = <3>;
+    events = <
+        // Quote and Shift+quote.
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,300)
+        ZMK_MOCK_PRESS(0,2,200) ZMK_MOCK_PRESS(0,0,40)
+        ZMK_MOCK_RELEASE(0,0,40) ZMK_MOCK_RELEASE(0,2,300)
+
+        // L1 grave, including a quick layer chord, and Shift+grave.
+        ZMK_MOCK_PRESS(0,1,200) ZMK_MOCK_PRESS(0,0,40)
+        ZMK_MOCK_RELEASE(0,0,40) ZMK_MOCK_RELEASE(0,1,300)
+        ZMK_MOCK_PRESS(0,1,35) ZMK_MOCK_PRESS(0,0,40)
+        ZMK_MOCK_RELEASE(0,0,50) ZMK_MOCK_RELEASE(0,1,300)
+        ZMK_MOCK_PRESS(0,2,200) ZMK_MOCK_PRESS(0,1,200)
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,40)
+        ZMK_MOCK_RELEASE(0,1,40) ZMK_MOCK_RELEASE(0,2,300)
+
+        // GUI hold on L0 and L1.
+        ZMK_MOCK_PRESS(0,0,200) ZMK_MOCK_PRESS(1,1,40)
+        ZMK_MOCK_RELEASE(1,1,40) ZMK_MOCK_RELEASE(0,0,300)
+        ZMK_MOCK_PRESS(0,1,200) ZMK_MOCK_PRESS(0,0,200)
+        ZMK_MOCK_PRESS(1,1,40) ZMK_MOCK_RELEASE(1,1,40)
+        ZMK_MOCK_RELEASE(0,0,40) ZMK_MOCK_RELEASE(0,1,300)
+
+        // Both outer thumbs still activate maintenance, on L0 and L1.
+        ZMK_MOCK_PRESS(0,0,20) ZMK_MOCK_PRESS(1,0,150)
+        ZMK_MOCK_PRESS(1,2,40) ZMK_MOCK_RELEASE(1,2,40)
+        ZMK_MOCK_RELEASE(1,0,40) ZMK_MOCK_RELEASE(0,0,300)
+        ZMK_MOCK_PRESS(0,1,200)
+        ZMK_MOCK_PRESS(0,0,20) ZMK_MOCK_PRESS(1,0,150)
+        ZMK_MOCK_PRESS(1,2,40) ZMK_MOCK_RELEASE(1,2,40)
+        ZMK_MOCK_RELEASE(1,0,40) ZMK_MOCK_RELEASE(0,0,40)
+        ZMK_MOCK_RELEASE(0,1,300)
+    >;
+};
