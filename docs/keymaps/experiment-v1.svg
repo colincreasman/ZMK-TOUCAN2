@@ -280,8 +280,8 @@ path.combo {
 </g>
 <g transform="translate(306, 224) rotate(12.0)" class="key keypos-37">
 <rect rx="6" ry="6" x="-28" y="-28" width="56" height="56" class="key"/>
-<text x="0" y="0" class="key tap">L1</text>
-<text x="0" y="26" class="key hold"><tspan style="font-size: 78%">Immediate</tspan></text>
+<text x="0" y="0" class="key tap">Enter</text>
+<text x="0" y="26" class="key hold">L1</text>
 </g>
 <g transform="translate(370, 242) rotate(24.0)" class="key keypos-38">
 <rect rx="6" ry="6" x="-28" y="-28" width="56" height="56" class="key"/>

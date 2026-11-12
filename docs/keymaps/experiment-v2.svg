@@ -276,12 +276,11 @@ path.combo {
 <g transform="translate(240, 217)" class="key keypos-36">
 <rect rx="6" ry="6" x="-28" y="-28" width="56" height="56" class="key"/>
 <text x="0" y="0" class="key tap">`</text>
-<text x="0" y="26" class="key hold">Shift</text>
+<text x="0" y="26" class="key hold">Cmd/GUI</text>
 </g>
 <g transform="translate(306, 224) rotate(12.0)" class="key keypos-37">
 <rect rx="6" ry="6" x="-28" y="-28" width="56" height="56" class="key"/>
-<text x="0" y="0" class="key tap">L1</text>
-<text x="0" y="26" class="key hold"><tspan style="font-size: 78%">Immediate</tspan></text>
+<text x="0" y="0" class="key tap">;</text>
 </g>
 <g transform="translate(370, 242) rotate(24.0)" class="key keypos-38">
 <rect rx="6" ry="6" x="-28" y="-28" width="56" height="56" class="key"/>
@@ -299,7 +298,7 @@ path.combo {
 </g>
 <g transform="translate(600, 217)" class="key keypos-41">
 <rect rx="6" ry="6" x="-28" y="-28" width="56" height="56" class="key"/>
-<text x="0" y="0" class="key tap">-</text>
+<text x="0" y="0" class="key tap">/</text>
 <text x="0" y="26" class="key hold">Cmd/GUI</text>
 </g>
 </g>
@@ -1660,4 +1659,5 @@ path.combo {
 </g>
 </g>
 </g>
-<text x="885.0" y="2502.5" class="footer">Center: tap; bottom: hold. Transparent keys inherit lower layers. Blank outer columns are unused.</text></svg>
+<text x="885.0" y="2502.5" class="footer">Center: tap; bottom: hold. Transparent keys inherit lower layers. Blank outer columns are unused.</text>
+<text x="885.0" y="2522.5" class="footer">Double-tap Tab: Caps Word.</text></svg>
