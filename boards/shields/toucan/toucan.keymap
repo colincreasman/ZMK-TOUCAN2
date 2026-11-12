@@ -38,7 +38,7 @@
 #define L2 2
 #define L3 3
 
-// Layer-tap, used by the right Space/L1 thumb.
+// Layer-tap, used by the right thumb `&lt L1 SPACE`.
 //
 // ZMK's stock `&lt` is `tap-preferred`, which only resolves a hold when the
 // tapping term expires -- pressing and releasing another key while it is held
@@ -54,8 +54,8 @@
 
 / {
     behaviors {
-        // Thumb hold-tap: grave/Cmd and Tab/Shift on the left,
-        // slash/Cmd on the right.
+        // Thumb hold-tap. Drives the thumb keys on BOTH halves:
+        // `&ht LG(C) ESC`, `&ht LSHFT TAB` (left) and `&ht RG(V) ESC` (right).
         //
         // Deliberately has NO `global-quick-tap` / `require-prior-idle-ms`.
         // Those make ZMK resolve the key to an *instant tap* whenever any other
@@ -74,22 +74,6 @@
             tapping-term-ms = <175>;
             quick-tap-ms = <125>;
             bindings = <&kp>, <&kp>;
-        };
-
-        tab_caps_dance: tab_caps_dance {
-            compatible = "zmk,behavior-tap-dance";
-            #binding-cells = <0>;
-            tapping-term-ms = <200>;
-            bindings = <&kp TAB>, <&caps_word>;
-        };
-
-        tab_shift: tab_shift {
-            compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <2>;
-            flavor = "balanced";
-            tapping-term-ms = <175>;
-            quick-tap-ms = <125>;
-            bindings = <&kp>, <&tab_caps_dance>;
         };
 
         // Homerow mods.
@@ -193,19 +177,6 @@
             key-positions = <1 2>;  // Combo q+w for ESCAPE
             bindings = <&kp ESC>;
         };
-        // Base-only so the same positions remain independent symbols on L1.
-        combo_enter_zx {
-            timeout-ms = <25>;
-            key-positions = <25 26>;
-            bindings = <&kp RET>;
-            layers = <L0>;
-        };
-        combo_enter_dot_slash {
-            timeout-ms = <25>;
-            key-positions = <33 34>;
-            bindings = <&kp RET>;
-            layers = <L0>;
-        };
         combo_maintenance_layer {
             timeout-ms = <100>;
             key-positions = <36 41>;  // Hold both far outer thumbs.
@@ -228,7 +199,7 @@
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
                 &none       &kp Z       &kp X       &kp C       &kp V       &kp B           &kp N       &kp M       &kp COMMA   &hyper_guard DOT &kp FSLH    &none
         //     ╰───────────┴───────────┴───────────├───────────├───────────┼───────────┤   ├───────────├───────────┼───────────┴───────────┴───────────╯
-                                                &ht LGUI GRAVE &kp SEMI &tab_shift LSHFT 0  &lt L1 SPACE  &kp BSPC   &ht RGUI FSLH
+                                                &ht LG(C) ESC  &kp RET   &ht LSHFT TAB    &lt L1 SPACE  &kp BSPC   &ht RG(V) ESC
         //                                         ╰───────────┴───────────┴───────────╯   ╰───────────┴───────────┴───────────╯
             >;
         };
@@ -238,11 +209,11 @@
             LAYER_NAME("NUM")
             bindings = <
         //     ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮   ╭───────────┬───────────┬───────────┬───────────┬───────────┬───────────╮
-                &none       &kp N1      &kp N2      &kp N3      &kp N4      &kp N5          &kp N6      &kp N7      &kp N8      &kp N9      &kp N0      &none
+                &none       &kp ESC     &kp N1      &kp N2      &kp N3      &trans          &trans      &trans      &kp UP      &kp MINUS   &kp EQUAL   &none
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
-                &none       &trans      &trans      &trans      &trans      &kp EQUAL       &trans      &kp LEFT    &kp DOWN    &kp UP      &kp RIGHT   &none
+                &none       HRML(GRAVE,     N4,         N5,         N6)     &trans          &trans      &kp LEFT    &kp DOWN    &kp RIGHT   &trans      &none
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
-                &none       &kp LPAR    &kp RPAR    &kp LBRC    &kp RBRC    &kp QMARK       &kp SEMI    &kp SQT     &kp LBKT    &kp RBKT    &kp UNDER   &none
+                &none       &trans      &kp N7      &kp N8      &kp N9      &kp N0          &kp SEMI    &kp SQT     &kp LBKT    &kp RBKT    &trans      &none
         //     ╰───────────┴───────────┴───────────├───────────├───────────┼───────────┤   ├───────────├───────────┼───────────┴───────────┴───────────╯
                                                    &trans      &trans      &trans          &trans      &trans      &trans
         //                                         ╰───────────┴───────────┴───────────╯   ╰───────────┴───────────┴───────────╯
