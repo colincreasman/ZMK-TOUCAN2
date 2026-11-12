@@ -55,7 +55,7 @@
 / {
     behaviors {
         // Thumb hold-tap. Drives the thumb keys on BOTH halves:
-        // `&ht LG(C) ESC`, `&ht LSHFT TAB` (left) and `&ht RG(V) ESC` (right).
+        // `&ht LG(C) ESC` (left) and `&ht RG(V) ESC` (right).
         //
         // Deliberately has NO `global-quick-tap` / `require-prior-idle-ms`.
         // Those make ZMK resolve the key to an *instant tap* whenever any other
@@ -74,6 +74,23 @@
             tapping-term-ms = <175>;
             quick-tap-ms = <125>;
             bindings = <&kp>, <&kp>;
+        };
+
+        // Tab on tap, Shift on hold; double-tap within 200ms for Caps Word.
+        tab_caps_dance: tab_caps_dance {
+            compatible = "zmk,behavior-tap-dance";
+            #binding-cells = <0>;
+            tapping-term-ms = <200>;
+            bindings = <&kp TAB>, <&caps_word>;
+        };
+
+        tab_shift: tab_shift {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <175>;
+            quick-tap-ms = <125>;
+            bindings = <&kp>, <&tab_caps_dance>;
         };
 
         // Homerow mods.
@@ -199,7 +216,7 @@
         //     ├───────────├───────────├───────────├───────────├───────────├───────────┤   ├───────────├───────────├───────────├───────────├───────────├───────────┤
                 &none       &kp Z       &kp X       &kp C       &kp V       &kp B           &kp N       &kp M       &kp COMMA   &hyper_guard DOT &kp FSLH    &none
         //     ╰───────────┴───────────┴───────────├───────────├───────────┼───────────┤   ├───────────├───────────┼───────────┴───────────┴───────────╯
-                                                &ht LG(C) ESC  &kp RET   &ht LSHFT TAB    &lt L1 SPACE  &kp BSPC   &ht RG(V) ESC
+                                                &ht LG(C) ESC  &kp RET   &tab_shift LSHFT 0 &lt L1 SPACE  &kp BSPC   &ht RG(V) ESC
         //                                         ╰───────────┴───────────┴───────────╯   ╰───────────┴───────────┴───────────╯
             >;
         };

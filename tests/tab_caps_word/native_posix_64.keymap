@@ -1,0 +1,73 @@
+#include <dt-bindings/zmk/keys.h>
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/kscan_mock.h>
+
+/ {
+    behaviors {
+        tab_caps_dance: tab_caps_dance {
+            compatible = "zmk,behavior-tap-dance";
+            #binding-cells = <0>;
+            tapping-term-ms = <200>;
+            bindings = <&kp TAB>, <&caps_word>;
+        };
+        tab_shift: tab_shift {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <175>;
+            quick-tap-ms = <125>;
+            bindings = <&kp>, <&tab_caps_dance>;
+        };
+    };
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <
+                &tab_shift LSHFT 0  &kp A     &kp BSPC
+                &kp SPACE           &kp RET   &kp B
+            >;
+        };
+    };
+};
+
+&kscan {
+    rows = <2>;
+    columns = <3>;
+    events = <
+        // Single Tab, then a quick Shift chord.
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,300)
+        ZMK_MOCK_PRESS(0,1,10) ZMK_MOCK_RELEASE(0,1,300)
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_PRESS(0,1,40)
+        ZMK_MOCK_RELEASE(0,1,10) ZMK_MOCK_RELEASE(0,0,300)
+
+        // Caps Word survives Backspace, but ends at Space.
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,50)
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,40)
+        ZMK_MOCK_PRESS(0,1,10) ZMK_MOCK_RELEASE(0,1,10)
+        ZMK_MOCK_PRESS(0,2,10) ZMK_MOCK_RELEASE(0,2,10)
+        ZMK_MOCK_PRESS(1,2,10) ZMK_MOCK_RELEASE(1,2,10)
+        ZMK_MOCK_PRESS(1,0,10) ZMK_MOCK_RELEASE(1,0,10)
+        ZMK_MOCK_PRESS(0,1,10) ZMK_MOCK_RELEASE(0,1,300)
+
+        // Enter also ends Caps Word.
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,50)
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,40)
+        ZMK_MOCK_PRESS(0,1,10) ZMK_MOCK_RELEASE(0,1,10)
+        ZMK_MOCK_PRESS(1,1,10) ZMK_MOCK_RELEASE(1,1,10)
+        ZMK_MOCK_PRESS(0,1,10) ZMK_MOCK_RELEASE(0,1,300)
+
+        // A single Tab ends Caps Word.
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,50)
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,40)
+        ZMK_MOCK_PRESS(0,1,10) ZMK_MOCK_RELEASE(0,1,300)
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,300)
+        ZMK_MOCK_PRESS(1,2,10) ZMK_MOCK_RELEASE(1,2,300)
+
+        // A second double-tap toggles Caps Word off.
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,50)
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,300)
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,50)
+        ZMK_MOCK_PRESS(0,0,40) ZMK_MOCK_RELEASE(0,0,40)
+        ZMK_MOCK_PRESS(0,1,10) ZMK_MOCK_RELEASE(0,1,100)
+    >;
+};
